@@ -1,0 +1,26 @@
+# Project repos nested here keep their own remotes and are not tracked by the
+# workbench. Add one line per repo. A path with square brackets in it needs
+# them escaped, because git reads [...] as a glob character class.
+# /example-app/
+
+# Editor and OS noise
+.DS_Store
+node_modules/
+
+# Obsidian workspace state: pane layout, scroll position, recent files. It
+# changes every session and nobody reads it. Uncomment per vault you open.
+# central-context/.obsidian/workspace.json
+# central-context/.obsidian/workspaces.json
+
+# Installed Obsidian plugins and themes are third-party and reinstallable.
+# community-plugins.json stays tracked so the list of what to reinstall
+# survives without the code that implements it.
+# central-context/.obsidian/plugins/
+# central-context/.obsidian/themes/
+
+# Session state, not configuration
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Hook output. Nobody reads it.
+runs/
