@@ -26,6 +26,11 @@ repo. Everything else is here.
 Claude Code skips a malformed role file in silence, so this is the only thing
 that reports one.
 
+`skills:` in a role file is written inline and comma separated. That is the
+only form the checker accepts. A flow list or an indented block list is
+reported by name and not parsed. One declared form is a smaller promise than
+three parsers, and it is the promise a reader can check.
+
 On roles it checks that frontmatter exists with `---` as the first line, that
 `name` matches the filename and is lowercase-hyphen, that `description` is not
 empty, that `model` is registered, and that every skill named in `skills:`

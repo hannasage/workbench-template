@@ -25,8 +25,14 @@ Roles, every `agents/*.md` except `README.md`:
    registered is reported as a question, never as an error. See below.
 5. Every skill in `skills:` has a readable `skills/<name>/SKILL.md`. An
    entry of that name that is a directory or a dangling symlink is reported
-   as such, not as a missing file. All three YAML forms are read: inline,
-   flow `[a, b]`, and an indented block list.
+   as such, not as a missing file.
+
+   `skills:` is written on one line, comma separated. That is the only
+   accepted form. Every other form YAML permits for the same field is reported
+   and none is read: a block list, a value that runs past its own line in any
+   shape, a flow list, and an empty flow list. Declaring one form is a smaller
+   promise than parsing several, and a refused form that names itself beats one
+   silently dropped.
 
 Skills, every directory directly under `skills/`:
 
@@ -93,9 +99,13 @@ BOM = "﻿"
 def parse(path, rel, failures):
     """Frontmatter of one file, or None after saying why not.
 
-    Returns (fields, lists). `fields` holds top-level scalars. `lists` holds
-    any key written as an indented YAML block list, which is the form a person
-    writes first and which a scalar-only reader drops silently.
+    Returns (fields, lists, continued). `fields` holds top-level scalars.
+    `lists` holds the items of any key written as an indented block list, and
+    `continued` names every key followed by an indented line of any shape.
+
+    Neither `lists` nor `continued` exists so a value can be parsed out of
+    them. They exist so a caller can refuse a form and say which one it was.
+    A key whose value runs past its own line is not read here.
     """
     try:
         text = path.read_text(encoding="utf-8")
@@ -112,12 +122,16 @@ def parse(path, rel, failures):
     if not match:
         failures.append(f"{rel}: no frontmatter, or --- is not the first line")
         return None
-    fields, lists, key = {}, {}, None
+    fields, lists, continued, key = {}, {}, set(), None
     for line in match.group(1).splitlines():
+        if not line.strip():
+            continue  # a blank line does not end the block it sits inside
         if line.startswith((" ", "\t")):
-            item = line.strip()
-            if key and item.startswith("- "):
-                lists.setdefault(key, []).append(item[2:].strip().strip('"').strip("'"))
+            if key:
+                continued.add(key)
+                item = line.strip()
+                if item.startswith("- "):
+                    lists.setdefault(key, []).append(item[2:].strip().strip('"').strip("'"))
             continue
         if ":" not in line:
             key = None
@@ -125,22 +139,40 @@ def parse(path, rel, failures):
         key, _, value = line.partition(":")
         key = key.strip()
         fields[key] = value.strip().strip('"')
-    return fields, lists
+    return fields, lists, continued
 
 
-def named_skills(fields, lists):
-    """Skill names from a `skills:` field, in any of the three forms YAML allows.
+def named_skills(fields, lists, continued, rel, failures):
+    """Skill names from `skills:`. Inline, comma separated, and nothing else.
 
-    `skills: a, b` inline, `skills: [a, b]` in flow form, or an indented block
-    list. The flow brackets are stripped rather than parsed; a name is never a
-    bracket, so a `[` left attached was a false failure naming a real skill.
+    YAML also permits a flow list and an indented block list. Supporting all
+    three means three parsers and three ways to be subtly wrong, which is how
+    this checker accumulated its defects. One form is declared here; the other
+    two are reported by name rather than parsed or, worse, silently dropped.
     """
-    names = list(lists.get("skills", []))
+    if "skills" in lists:
+        failures.append(
+            f"{rel}: skills: is a block list. Write it on one line, comma "
+            f"separated: skills: alpha, beta"
+        )
+        return []
+    if "skills" in continued:
+        failures.append(
+            f"{rel}: skills: runs past its own line. Write it on one line, "
+            f"comma separated: skills: alpha, beta"
+        )
+        return []
     raw = fields.get("skills", "").strip()
-    if raw.startswith("[") and raw.endswith("]"):
-        raw = raw[1:-1]
-    names.extend(raw.split(","))
-    return [n.strip().strip('"').strip("'") for n in names if n.strip()]
+    if raw in ("[]", "[ ]"):
+        failures.append(f"{rel}: skills: is empty. Delete the line.")
+        return []
+    if raw.startswith("[") or raw.endswith("]"):
+        failures.append(
+            f"{rel}: skills: is a flow list. Write it on one line, comma "
+            f"separated, with no brackets: skills: alpha, beta"
+        )
+        return []
+    return [n.strip().strip('"').strip("'") for n in raw.split(",") if n.strip()]
 
 
 def load_models(root, failures):
@@ -192,7 +224,7 @@ def check_agents(root, models, failures, questions):
         parsed = parse(path, rel, failures)
         if parsed is None:
             continue
-        fields, lists = parsed
+        fields, lists, continued = parsed
         name = fields.get("name", "")
         if name != path.stem:
             failures.append(f"{rel}: name '{name}' does not match filename")
@@ -206,7 +238,7 @@ def check_agents(root, models, failures, questions):
                 f"{rel}: model '{model}' is not registered. A typo, or a model "
                 f"to add to {MODEL_REGISTRY}?"
             )
-        for skill in named_skills(fields, lists):
+        for skill in named_skills(fields, lists, continued, rel, failures):
             skill_path, problem = skill_file(skills_dir / skill)
             if skill_path is None:
                 failures.append(f"{rel}: skill '{skill}': skills/{skill}/{problem}")

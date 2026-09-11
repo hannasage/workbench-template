@@ -681,33 +681,47 @@ class CheckRolesTest(unittest.TestCase):
 
     # -- defects found by critic on the template sync, 2026-09-11 -----------
 
-    def test_skills_field_as_a_yaml_block_list_is_checked(self):
-        """A role naming a missing skill as an indented block list must fail.
+    def test_skills_as_a_block_list_is_rejected_by_name(self):
+        """One form is accepted, and the others are named rather than parsed.
 
-        The scalar-only reader dropped indented lines, so this form passed
-        silently. Silent passing is the failure the whole script exists to
-        prevent, and a block list is the form a person writes first."""
+        A block list used to be dropped silently, which is the failure the
+        script exists to prevent. It is not parsed now either: it is reported,
+        so the writer is told what to change."""
         root = self._base()
         self._write(root, "agents/alpha.md",
                     "---\nname: alpha\ndescription: x\nskills:\n  - does-not-exist\n---\n")
         failures, _ = check_roles.run(root)
-        self.assertTrue(any("does-not-exist" in f for f in failures),
-                        f"block-form skills list was not checked: {failures}")
+        self.assertTrue(any("skills: is a block list" in f for f in failures),
+                        f"block form was not reported: {failures}")
+        self.assertFalse(any("does-not-exist" in f for f in failures),
+                         "an unsupported form must not also be parsed")
 
-    def test_skills_field_in_flow_form_names_the_skill_not_the_bracket(self):
-        """`skills: [a, b]` must not produce a failure against a real skill.
+    def test_skills_as_a_flow_list_is_rejected_by_name(self):
+        """`skills: [a, b]` is reported, not silently half-parsed.
 
-        Splitting on commas alone left the brackets attached, so a present
-        skill was reported missing under an unparseable path."""
+        Splitting on commas alone left the brackets attached and produced a
+        false failure against a skill that was present."""
         root = self._base()
         self._write(root, "skills/wiki-query/SKILL.md", skill_md("wiki-query"))
         self._write(root, "agents/alpha.md",
                     "---\nname: alpha\ndescription: x\nskills: [wiki-query, does-not-exist]\n---\n")
         failures, _ = check_roles.run(root)
+        self.assertTrue(any("skills: is a flow list" in f for f in failures),
+                        f"flow form was not reported: {failures}")
         self.assertFalse(any("wiki-query" in f for f in failures),
+                         "a present skill must never be reported missing")
+
+    def test_skills_inline_is_the_accepted_form(self):
+        """The one declared form parses, and a missing skill in it still fails."""
+        root = self._base()
+        self._write(root, "skills/wiki-query/SKILL.md", skill_md("wiki-query"))
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills: wiki-query, does-not-exist\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertFalse(any("wiki-query/" in f for f in failures),
                          f"a present skill was reported missing: {failures}")
         self.assertTrue(any("skill 'does-not-exist'" in f for f in failures),
-                        f"the absent skill was not named cleanly: {failures}")
+                        f"the absent skill was not named: {failures}")
 
     def test_non_utf8_model_registry_is_a_failure_not_a_traceback(self):
         """load_models caught OSError only, so a UnicodeDecodeError escaped."""
@@ -747,6 +761,72 @@ class CheckRolesTest(unittest.TestCase):
         Inner().run(unittest.TestResult())
         self.assertEqual(set(check_roles.THIRD_PARTY_SKILLS), original,
                          "the set was not restored after the test finished")
+
+    def test_skills_block_list_after_a_blank_line_is_still_refused(self):
+        """Criterion 28. A blank line between the key and its items is valid
+        YAML and used to clear the parser's idea of the current key, so the
+        items were dropped in silence. The silent drop is the whole defect."""
+        root = self._base()
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills:\n\n  - does-not-exist\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertTrue(any("skills:" in f and "block list" in f for f in failures),
+                        f"a block list behind a blank line was dropped: {failures}")
+
+    def test_skills_as_a_multi_line_plain_scalar_is_refused(self):
+        """Criterion 28. `skills:` then indented plain lines is valid YAML for
+        one string. Nothing was read and nothing was said."""
+        root = self._base()
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills:\n  wiki-query,\n  does-not-exist\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertTrue(any("runs past its own line" in f for f in failures),
+                        f"a multi-line scalar was dropped: {failures}")
+
+    def test_skills_with_a_continuation_line_is_refused_not_half_read(self):
+        """Criterion 28, the worst variant: the first line parses, so the file
+        looks checked while the continuation is discarded."""
+        root = self._base()
+        self._write(root, "skills/wiki-query/SKILL.md", skill_md("wiki-query"))
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills: wiki-query,\n  does-not-exist\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertTrue(any("runs past its own line" in f for f in failures),
+                        f"a continuation line was half-read: {failures}")
+        self.assertFalse(any("skill 'wiki-query'" in f for f in failures),
+                         "a refused form must not also be parsed")
+
+    def test_empty_flow_list_says_delete_the_line(self):
+        """Criterion 29. `skills: []` declares no skills and loses nothing, so
+        telling the writer to comma-separate it is advice they cannot take."""
+        root = self._base()
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills: []\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertTrue(any("is empty. Delete the line." in f for f in failures),
+                        f"expected the delete-the-line message, got {failures}")
+
+    def test_a_trailing_bracket_alone_is_refused(self):
+        """Criterion 29. Detection is on either bracket, not both. Testing only
+        the balanced form let `or` become `and` with the suite still green."""
+        root = self._base()
+        self._write(root, "agents/alpha.md",
+                    "---\nname: alpha\ndescription: x\nskills: wiki-query]\n---\n")
+        failures, _ = check_roles.run(root)
+        self.assertTrue(any("flow list" in f for f in failures),
+                        f"a trailing bracket was not refused: {failures}")
+
+    def test_a_quoted_inline_skill_name_has_its_quotes_stripped(self):
+        """Criterion 28. Without this the quote stripping could be deleted and
+        the suite stayed green, while `skills: 'wiki-query'` produced a false
+        failure naming a skill that is present."""
+        root = self._base()
+        self._write(root, "skills/wiki-query/SKILL.md", skill_md("wiki-query"))
+        for quoted in ("'wiki-query'", '"wiki-query"'):
+            self._write(root, "agents/alpha.md",
+                        f"---\nname: alpha\ndescription: x\nskills: {quoted}\n---\n")
+            failures, _ = check_roles.run(root)
+            self.assertEqual(failures, [], f"{quoted} should resolve to wiki-query")
 
 if __name__ == "__main__":
     unittest.main()
