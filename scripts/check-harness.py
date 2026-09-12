@@ -39,7 +39,6 @@ pattern comes from `adapters/`.
 """
 
 import importlib.util
-import json
 import os
 import re
 import sys
@@ -60,7 +59,12 @@ CORE_PATHS = (
     "DECISIONS.md", "SPEC.md", "README.md", ".gitignore",
 )
 ADAPTER_TOKEN = re.compile(r"adapters/[a-z0-9-]+(?:/[^\s`)]*)?")
-SYMLINK_HINT = "On Windows: git config core.symlinks true, then git checkout -- ."
+SYMLINK_HINT = ("On Windows: turn on Developer Mode or run as Administrator, "
+                "then git config core.symlinks true, then git checkout -- .")
+# Immutable sources and research deliverables may quote anything, harness
+# names included, and the rule for raw/ is that nothing edits it. Neither is
+# instruction text a harness loads, so neither is scanned.
+UNSCANNED = ("central-context/raw", "central-context/docs")
 
 
 def _load_sync():
@@ -78,8 +82,18 @@ sync = _load_sync()
 def declared_links(root, failures):
     """path -> target across every manifest, with disagreements reported."""
     links, owners = {}, {}
-    for adapter, manifest in sync.load_manifests(root):
-        for path, target in (manifest.get("links") or {}).items():
+    try:
+        manifests = sync.load_manifests(root)
+    except sync.SyncError as exc:
+        failures.append(str(exc))
+        return links
+    for adapter, manifest in manifests:
+        declared = manifest.get("links") or {}
+        if not isinstance(declared, dict) or not all(
+                isinstance(k, str) and isinstance(v, str) for k, v in declared.items()):
+            failures.append(f"adapters/{adapter}/{sync.MANIFEST}: links must map a path to a target")
+            continue
+        for path, target in declared.items():
             if path in links and links[path] != target:
                 failures.append(
                     f"{path}: adapters/{owners[path]} declares {links[path]}, "
@@ -91,6 +105,9 @@ def declared_links(root, failures):
 
 
 def check_links(root, links, failures):
+    """Returns the links that passed, so a broken one is one failure and not
+    one per file that would have been reachable through it."""
+    good = {}
     for rel, target in links.items():
         path = root / rel
         if not path.is_symlink():
@@ -107,6 +124,9 @@ def check_links(root, links, failures):
             continue
         if not path.exists():
             failures.append(f"{rel}: target {target} does not exist")
+            continue
+        good[rel] = target
+    return good
 
 
 # --- 2. reachability ---------------------------------------------------------
@@ -130,6 +150,8 @@ def check_reachable(root, links, failures):
                     failures.append(f"{source}: not reachable through {rel}")
         elif destination == agents_dir and agents_dir.is_dir():
             for role in sorted(agents_dir.glob("*.md")):
+                if role.name == "README.md":
+                    continue
                 if not (root / rel / role.name).is_file():
                     failures.append(f"agents/{role.name}: not reachable through {rel}")
 
@@ -155,7 +177,14 @@ def load_patterns(root, failures):
     if not path.is_file():
         failures.append(f"{NAMES_FILE}: missing")
         return None
-    lines = [l.strip() for l in path.read_text(encoding="utf-8").splitlines()]
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        failures.append(f"{NAMES_FILE}: cannot be read, {type(exc).__name__}")
+        return None
+    # A trailing comment after whitespace is stripped, so a pattern never
+    # silently requires the comment text to match.
+    lines = [re.sub(r"\s+#.*$", "", l).strip() for l in text.splitlines()]
     lines = [l for l in lines if l and not l.startswith("#")]
     if not lines:
         failures.append(f"{NAMES_FILE}: holds no pattern")
@@ -174,8 +203,11 @@ def core_files(root):
             yield path
         elif path.is_dir():
             for sub in sorted(path.rglob("*")):
-                parts = sub.relative_to(root).parts
+                rel = sub.relative_to(root)
+                parts = rel.parts
                 if any(p.startswith(".") or p == "__pycache__" for p in parts):
+                    continue
+                if any(rel.as_posix().startswith(u + "/") for u in UNSCANNED):
                     continue
                 if sub.is_file() and not sub.is_symlink():
                     yield sub
@@ -218,8 +250,8 @@ def run(root):
     root = Path(root)
     failures = []
     links = declared_links(root, failures)
-    check_links(root, links, failures)
-    check_reachable(root, links, failures)
+    good = check_links(root, links, failures)
+    check_reachable(root, good, failures)
     check_generated(root, failures)
     check_neutral_core(root, failures)
     check_entrypoint_size(root, failures)

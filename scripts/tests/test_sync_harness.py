@@ -189,6 +189,73 @@ class SyncHarnessTest(unittest.TestCase):
             sync.expected_outputs(self.root)
         self.assertIn("agents/bad.md", str(ctx.exception))
 
+    # -- inputs the review found unguarded, 2026-09-12 --------------------------
+
+    def test_role_name_that_does_not_match_its_filename_is_an_input_error(self):
+        self.fx.write("agents/alpha.md", role_md("../../escape"))
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.expected_outputs(self.root)
+        self.assertIn("agents/alpha.md", str(ctx.exception))
+
+    def test_roles_dir_that_escapes_the_root_is_an_input_error(self):
+        for bad in (".x/agents/..", "/tmp/elsewhere", "../outside"):
+            with self.subTest(dir=bad):
+                manifest = {"roles": {"format": "toml-agent", "dir": bad, "mapping": "roles.json"}}
+                self.fx.write("adapters/x/wiring.json", json.dumps(manifest))
+                with self.assertRaises(sync.SyncError) as ctx:
+                    sync.stale(self.root)
+                self.assertIn("dir", str(ctx.exception))
+
+    def test_mapping_key_that_is_not_a_bare_toml_key_is_an_input_error(self):
+        for key in ("model reasoning", "a.b", "description", "name", "developer_instructions"):
+            with self.subTest(key=key):
+                self.fx.write("adapters/x/roles.json", json.dumps({"defaults": {key: "v"}, "roles": {}}))
+                with self.assertRaises(sync.SyncError) as ctx:
+                    sync.expected_outputs(self.root)
+                self.assertIn(key, str(ctx.exception))
+
+    def test_env_key_that_is_not_a_bare_toml_key_is_an_input_error(self):
+        self._mcp_tree({"s": {"command": "c", "env": {"MY.VAR": "1"}}})
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.expected_outputs(self.root)
+        self.assertIn("MY.VAR", str(ctx.exception))
+
+    def test_wrong_json_types_are_input_errors_not_tracebacks(self):
+        cases = [
+            ("adapters/x/roles.json", json.dumps([])),
+            ("adapters/x/roles.json", json.dumps({"defaults": {}, "roles": {"alpha": "str"}})),
+            ("adapters/x/roles.json", json.dumps({"defaults": [], "roles": {}})),
+        ]
+        for rel, text in cases:
+            with self.subTest(rel=rel, text=text):
+                self.fx.write(rel, text)
+                with self.assertRaises(sync.SyncError):
+                    sync.expected_outputs(self.root)
+        self._mcp_tree({"s": {"command": 123}})
+        with self.assertRaises(sync.SyncError):
+            sync.expected_outputs(self.root)
+        self._mcp_tree({"s": {"type": "http", "url": "u", "headers": ["x"]}})
+        with self.assertRaises(sync.SyncError):
+            sync.expected_outputs(self.root)
+
+    def test_non_utf8_head_or_generated_file_is_an_input_error(self):
+        self._mcp_tree({})
+        (self.root / "adapters/x/config.toml").write_bytes(b"# caf\xe9\n")
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.expected_outputs(self.root)
+        self.assertIn("adapters/x/config.toml", str(ctx.exception))
+        self.fx.write("adapters/x/config.toml", "# ok\n")
+        sync.write(self.root)
+        (self.root / ".x/config.toml").write_bytes(b"\xff\xfe")
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.stale(self.root)
+        self.assertIn(".x/config.toml", str(ctx.exception))
+
+    def test_root_flag_without_a_path_exits_2_even_before_check(self):
+        result = self._cli("--root", "--check")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("--root needs a path", result.stderr)
+
     # -- stale, write, orphans --------------------------------------------------
 
     def test_stale_reports_every_missing_file_before_the_first_write(self):

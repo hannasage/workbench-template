@@ -126,18 +126,31 @@ class CheckHarnessTest(unittest.TestCase):
 
     # -- reachability -----------------------------------------------------------
 
-    def test_a_skill_unreachable_through_a_skills_link_is_named(self):
+    def test_a_directory_where_a_link_should_be_is_one_failure_with_the_hint(self):
         (self.root / ".acme/skills").unlink()
         (self.root / ".acme/skills").mkdir()
         failures = check.run(self.root)
+        self.assertEqual(len(failures), 1, failures)
         self.assertIn(".acme/skills: is a directory, not a symlink to ../skills", failures[0])
-        self.assertTrue(any("skills/one/SKILL.md" in f and ".acme/skills" in f for f in failures), failures)
 
-    def test_a_role_unreachable_through_an_agents_link_is_named(self):
+    def test_a_link_to_the_wrong_directory_is_one_failure(self):
         (self.root / ".acme/agents").unlink()
         os.symlink("../skills", self.root / ".acme/agents")
-        failures = check.run(self.root)
-        self.assertTrue(any("agents/alpha.md" in f and ".acme/agents" in f for f in failures), failures)
+        self.assertEqual(check.run(self.root), [".acme/agents: points at ../skills, not ../agents"])
+
+    def test_reachability_names_each_file_a_declared_link_does_not_serve(self):
+        """The unit, called directly: run() only hands it links that passed,
+        so a partial copy behind a declared path is what it exists to name."""
+        (self.root / ".acme/skills").unlink()
+        (self.root / ".acme/skills").mkdir()
+        (self.root / ".acme/agents").unlink()
+        (self.root / ".acme/agents").mkdir()
+        failures = []
+        check.check_reachable(self.root, {".acme/skills": "../skills", ".acme/agents": "../agents"}, failures)
+        self.assertEqual(failures, [
+            "skills/one/SKILL.md: not reachable through .acme/skills",
+            "agents/alpha.md: not reachable through .acme/agents",
+        ])
 
     # -- generated files --------------------------------------------------------
 
@@ -183,6 +196,49 @@ class CheckHarnessTest(unittest.TestCase):
         import shutil
         shutil.rmtree(self.root / "adapters")
         self.assertEqual(check.run(self.root), [])
+
+    # -- inputs the review found unguarded, 2026-09-12 --------------------------
+
+    def test_a_broken_link_is_one_failure_not_one_per_skill(self):
+        (self.root / ".acme/skills").unlink()
+        failures = check.run(self.root)
+        self.assertEqual(failures, [".acme/skills: missing. Expected a symlink to ../skills"])
+
+    def test_agents_readme_is_not_a_role_for_reachability(self):
+        (self.root / ".acme/agents").unlink()
+        (self.root / ".acme/agents").mkdir()
+        failures = []
+        check.check_reachable(self.root, {".acme/agents": "../agents"}, failures)
+        self.assertEqual(failures, ["agents/alpha.md: not reachable through .acme/agents"])
+
+    def test_raw_sources_and_research_docs_are_not_scanned(self):
+        self.fx.write("central-context/raw/sources/2026-09-12-mail.txt", "Acme Harness said hi.\n")
+        self.fx.write("central-context/docs/2026-09-12-run/report.md", "Acme Harness compared.\n")
+        self.fx.write("central-context/wiki/overview.md", "no harness here\n")
+        self.assertEqual(check.run(self.root), [])
+
+    def test_a_wiki_page_is_scanned(self):
+        self.fx.write("central-context/wiki/overview.md", "Acme Harness here.\n")
+        self.assertIn("central-context/wiki/overview.md:1: names a harness: Acme Harness",
+                      check.run(self.root))
+
+    def test_names_file_trailing_comment_is_stripped(self):
+        self.fx.write("adapters/harness-names.txt", "Acme Harness  # the harness\n")
+        self.fx.write("README.md", "# readme\n\nWe run Acme Harness here.\n")
+        self.assertIn("README.md:3: names a harness: Acme Harness", check.run(self.root))
+
+    def test_unreadable_names_file_is_a_failure_not_a_traceback(self):
+        (self.root / "adapters/harness-names.txt").write_bytes(b"\xff\xfe")
+        failures = check.run(self.root)
+        self.assertTrue(any(f.startswith("adapters/harness-names.txt:") for f in failures), failures)
+
+    def test_a_bad_manifest_is_a_failure_line_not_a_traceback(self):
+        self.fx.write("adapters/x/wiring.json", "{bad")
+        failures = check.run(self.root)
+        self.assertTrue(any("adapters/x/wiring.json" in f for f in failures), failures)
+        self.fx.write("adapters/x/wiring.json", json.dumps({"links": ["a", "b"]}))
+        failures = check.run(self.root)
+        self.assertTrue(any("adapters/x/wiring.json" in f for f in failures), failures)
 
     # -- the entrypoint size cap -----------------------------------------------
 
