@@ -2,7 +2,7 @@
 type: overview
 status: draft
 created: 2026-09-11
-updated: 2026-09-11
+updated: 2026-09-12
 sources: []
 ---
 # overview
@@ -24,8 +24,10 @@ subject, and `wiki-ingest` writes the row when it creates one.
 
 ## Links
 
-- `index.md` at the repo root is the catalog.
-- `AGENTS.md` at the repo root is the schema.
+- [[index]], the catalog, at the root of the knowledge base.
+- The page schema is `central-context/AGENTS.md`, at that same root. It stays a
+  path, because the clone root ships a second file of that name.
+- No second page exists under `wiki/` yet. The first ingest writes one.
 
 ## Open questions
 

@@ -1,8 +1,8 @@
 # workbench-template
 
-A starting structure for a Claude Code workbench built around an LLM wiki:
-a knowledge base an agent compiles from sources and keeps current, plus the
-agent roles and skills that maintain it.
+A starting structure for a workbench built around an LLM wiki: a knowledge base
+an agent compiles from sources and keeps current, plus the agent roles and skills
+that maintain it.
 
 Clone it, run one setup pass, and you have a second brain your agents read
 before every task and correct when the world moves.
@@ -12,12 +12,12 @@ before every task and correct when the world moves.
 ```
 workbench/
   AGENTS.md            the entrypoint. Read at the start of every session
-  CLAUDE.md            symlink to AGENTS.md
   DECISIONS.md         append-only decision log
   .gitignore           project repos you nest here stay untracked
+  adapters/            one thin adapter per harness
   agents/              14 role definitions, all examples
   skills/              12 skills: five that run the wiki, seven that run research
-  scripts/             check-roles.py, and anything else executable
+  scripts/             check-roles.py, its tests, and anything else executable
   prompts/             setup.md, and prompts you paste in on purpose
   central-context/     the knowledge base
     raw/               sources, immutable, written by a person
@@ -54,15 +54,89 @@ old, which is the failure that actually happens.
 ```bash
 git clone https://github.com/hannasage/workbench-template.git my-workbench
 cd my-workbench
-claude
 ```
 
-Then paste `prompts/setup.md` into the session. It interviews you, fills in
-every placeholder, walks you through which example roles to keep, and ingests
-your first real source so you have seen the loop run once.
+Start your agent in that directory, then paste `prompts/setup.md` into the
+session. It interviews you, fills in every placeholder, walks you through which
+example roles to keep, and ingests your first real source so you have seen the
+loop run once.
 
 Setup takes one sitting. Skipping it leaves a workbench that describes someone
 else's business.
+
+## More than one harness
+
+A harness is the program that runs the agent loop and reads these files. This
+workbench is built to run on more than one, and no harness has been verified on
+it yet. The entrypoint, the knowledge base, the skills and the roles name none of
+them, and each harness gets a thin adapter that holds only its own wiring: how it
+discovers a skill, how it spells a role, which model it points at, and what
+happened the last time somebody ran it. The directory listed above is the place
+to look, and one routing row in `AGENTS.md` points there. Nothing else in this
+tree carries that wiring.
+
+One adapter ships today. Every surface cell in the support matrix there reads
+`not tested` or `no adapter`, read 2026-09-12, so what is built is the structure
+and not a proven run.
+
+## The vault configuration is yours
+
+Wikilinks and page frontmatter are deliberate conventions, not incidental ones.
+The owner settled both on 2026-09-11 and accepted one outside dependency to carry
+them, which is Obsidian. The decision records three reasons. Obsidian costs
+nothing, it is in common use for reading markdown, and it resolves a wikilink and
+reads page frontmatter with no setup. Its pricing page states the free tier as
+"Free without limits. No sign-up required. No strings attached." and says a
+commercial license is encouraged and not required
+(`https://obsidian.md/pricing`, retrieved 2026-09-12).
+
+The template therefore ships no `.obsidian/` directory and needs none to read.
+Obsidian generates links in wikilink form by default: "By default, due to its
+more compact format, Obsidian generates links using the Wikilink format"
+(`https://obsidian.md/help/links`, retrieved 2026-09-12).
+
+Almost nothing that ships carries a wikilink, because nothing is ingested yet.
+Three files under `central-context/` hold a pair of double square brackets, on
+seven lines in total, read 2026-09-12. Two of those seven lines are live links,
+and they point at each other: the wiki map `central-context/wiki/overview.md`
+links `[[index]]`, and the catalog `central-context/index.md` links
+`[[overview]]`. The other five lines sit inside code spans in
+`central-context/AGENTS.md`, which quotes the convention while stating it, so they
+are examples and not links. That is the whole of it until your first ingest. The
+convention binds every page you write, per the page schema, and Obsidian's default
+is what makes it work with no configuration.
+
+One manual check proves that, and **nobody has run it.** Open a fresh clone as a
+vault. Add no configuration, keep the default theme, enable no community plugin.
+Write two pages under `central-context/wiki/`, link one to the other with a
+wikilink, and click it. It resolves to its target. The check is manual because
+nothing here drives Obsidian, and it stays unrun until somebody writes down the
+date they ran it.
+
+Two settings are worth your own minute. Leave `Use [[Wikilinks]]` on, under
+**Settings > Files and links**, so a page you write later still matches the page
+schema instead of landing as a CommonMark link (`https://obsidian.md/help/links`,
+retrieved 2026-09-12). Point `Default location for new notes` at a folder so a
+new note does not land in the vault root (same page and date). Attachments have
+their own setting, `Default location for new attachments`, documented on its own
+page as **Settings → Files & Links → Default location for new attachments**
+(`https://obsidian.md/help/attachments`, retrieved 2026-09-12).
+
+Pane layout, theme and plugins stay personal, and no plugin code is vendored
+here. `.gitignore` already names the per-person state, so a vault you do
+configure keeps its view state out of a commit.
+
+## Two conventions the knowledge base depends on
+
+Both are mandated by the page schema in `central-context/AGENTS.md`, and that
+file states them in full beside the reason.
+
+- **Wikilinks**, a page name inside double square brackets, as in
+  `[[branch-discipline]]`. `wiki-lint` resolves every one of them to exactly one
+  file, and `wiki-query` follows them from a page to its neighbours, so they
+  carry navigation and not decoration.
+- **YAML page frontmatter** on every page, which is also where an open item
+  lives, so the convention carries the unresolved questions too.
 
 ## The examples are examples
 
@@ -84,21 +158,18 @@ surface it.
 
 ## Requirements
 
-- [Claude Code](https://claude.com/claude-code)
 - Python 3 for `scripts/check-roles.py`
 - Git
+- An agent harness, and the adapter for it
 
 No build step, no dependencies, no install.
 
 ## Conventions worth knowing before you edit
 
-- A skill is discovered only when its directory sits directly under `skills/`
-  with a `SKILL.md` inside. Nesting one level deeper disables it silently.
-- `.claude/agents` and `.claude/skills` are symlinks to `agents/` and
-  `skills/`. That is what makes the roles available in every project nested
-  under the workbench, not just in one repo.
+- A skill is one directory directly under `skills/` with a `SKILL.md` inside it,
+  and its `name` field matches that directory name. Nesting one a level deeper
+  hides it.
 - `central-context/` holds no code, ever. Executables go in `scripts/`.
-- Claude Code loads `agents/` when a session starts. A role added mid-session
-  is not available until the next one.
 - Run `python3 scripts/check-roles.py` before any commit touching `agents/` or
-  `skills/`. Claude Code skips a malformed role file and reports nothing.
+  `skills/`. A malformed role file is skipped in silence, so the script is the
+  only thing that will tell you.

@@ -1,8 +1,6 @@
 ---
 name: research-editor
-description: Writes the deliverable for a research run from the notes files and CHECK.md, in the format research-operations specifies, and writes nothing else. Use last, after the fact-checker reports that the run may proceed. Adds no fact, keeps no unconfirmed fact, and resolves no decision that is the owner's.
-tools: Read, Grep, Glob, Write, Edit, Skill
-model: sonnet
+description: Writes the deliverable for a research run from the notes files and CHECK.md, in the format research-operations specifies, and writes nothing else. Use last, after the fact-checker reports that the run may proceed, on a mid-tier model. Adds no fact, keeps no unconfirmed fact, and resolves no decision that is the owner's.
 skills: research-operations
 ---
 

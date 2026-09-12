@@ -1,12 +1,16 @@
 ---
 type: index
-updated: 2026-09-11
+updated: 2026-09-12
 ---
 
 # agents
 
 Role definitions for the delivery pipeline and the research team. One file per
-role, in Claude Code's subagent format: YAML frontmatter, then a system prompt.
+role: YAML frontmatter carrying `name` and `description`, then the system prompt
+as the body. A role is one job with one output. The frontmatter carries no tool
+list and no model, because no two harnesses name those the same way. A harness
+is the program that runs the agent loop, and each one gets those values from its
+own adapter.
 
 **Every role in this folder is an example.** They came out of one working
 practice and they carry that practice's opinions about testing, about what a
@@ -17,25 +21,35 @@ change what does not fit, and delete the ones you will not. A role you kept
 without reading is a role that will make decisions you did not agree to.
 `../prompts/setup.md` walks the first pass.
 
-`../.claude/agents` is a symlink to this folder, the same arrangement
-`../.claude/skills` uses for `../skills`. That is what makes these roles
-available in every project under the workbench, not only in one repo.
+These files are the one copy of every role. Whatever a harness needs to find
+them, or to run them in its own format, lives in that harness's adapter. The
+routing table in `../AGENTS.md` has the row that leads there. Nothing in this
+folder is generated, and nothing here is a copy of anything else.
 
 How the roles fit together, and where a human still has to touch the work,
 belongs on a page in your own wiki. The practice this came from keeps it at
 `../central-context/wiki/domains/engineering/concepts/delivery-pipeline.md`.
 Until you write it, the tables below are the map.
 
-These files carry Claude Code's schema, not a wiki page schema, so `wiki-lint`
-does not check them. Links that resolve still bind.
+These files carry the role schema, not the wiki page schema, so `wiki-lint` does
+not check them. Links that resolve still bind.
 
 `../scripts/check-roles.py` checks their frontmatter: a name that is lowercase
-and hyphens and matches the filename, a description, a model that is a real
-alias, and that every skill named exists. Claude Code skips a malformed role
-file and reports nothing, so run the script before committing a role.
+and hyphens and matches the filename, a description, that every skill named
+exists, and that a `model:` value, where a role names one, is listed in
+`../scripts/model-registry.txt`. No role here names a model, so the model check
+never fires on the shipped tree; it is there for a cloner who pins one. An
+unregistered value is reported as a question, not an error, because the script
+cannot tell a typo from a model nobody has registered yet. The registry ships
+with no values in it on purpose, which is a different thing from a registry that
+is not there: a file the script cannot read is reported as a failure. A harness
+skips a malformed role file and reports nothing, so run the script before
+committing a role.
 
-Claude Code loads this folder when a session starts. A role added mid-session is
-not available until the next one.
+A harness that dispatches roles usually reads them when the session starts, so a
+role added mid-session is not available until the next one. A harness that
+dispatches nothing still runs the whole pipeline in the main session: read the
+role file yourself and follow it in turn. No rule lives only in a role file.
 
 ## Reporting to the context
 
@@ -53,11 +67,11 @@ Context files are the container `AGENTS.md`, each repo's `AGENTS.md`, each
 `SKILL.md`, each `SPEC.md`, every page under `../central-context/wiki/`, and the
 `open_items` frontmatter in any of them.
 
-The `scribe` is the one exception, and a narrow one. It writes `BUILDLOG.md` and
-`DECISIONS.md`, because both are append-only records of what happened in one
-run. It does not edit `AGENTS.md`, a `SKILL.md`, a wiki page, or an `open_items`
-block. Those state what is true now, which is the judgement the main session
-keeps.
+The `scribe` is the one exception, and a narrow one. It writes `DECISIONS.md`
+and the one-line entry in `central-context/log.md`, because both are append-only
+records of what happened in one run. It does not edit `AGENTS.md`, a
+`SKILL.md`, a wiki page, or an `open_items` block. Those state what is true now,
+which is the judgement the main session keeps.
 
 Every role file carries a `Context findings` section that says what counts as
 one for that role.
@@ -73,7 +87,7 @@ one for that role.
 | `test-writer.md` | Writes tests against the criteria, not against the code | Tests |
 | `gatekeeper.md` | Runs the gates and fixes only what they flag | Source, narrowly |
 | `critic.md` | Reviews the diff against the house rules | Nothing |
-| `scribe.md` | Writes the build log, the decision entry and the pull request | Logs, the PR |
+| `scribe.md` | Writes the decision entry, the context log line and the pull request | Logs, the PR |
 
 ## The research team
 

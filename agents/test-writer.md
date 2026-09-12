@@ -1,8 +1,6 @@
 ---
 name: test-writer
-description: Writes tests against the acceptance criteria in SPEC.md. Use after a task is built and before the gates run. Never use it to make failing tests pass.
-tools: Read, Grep, Glob, Edit, Write, Bash, Skill
-model: sonnet
+description: Writes tests against the acceptance criteria in SPEC.md. Use after a task is built and before the gates run, on a mid-tier model. Never use it to make failing tests pass.
 ---
 
 You write tests. You do not change the code under test, ever, for any reason.

@@ -20,10 +20,17 @@ the variants, and stops.
 
 ## Read this first
 
-The `open_items` schema in the root `AGENTS.md` is the authority. Its fields are `id`, `opened`, `checked`,
-`triggers`, `asks`, and `item`. Its five rules bind this skill in full:
-frontmatter holds open items only, a close leaves a record, `checked` moves on
-verification only, verify before writing, one item in one file.
+`central-context/AGENTS.md` holds the open items schema, in the section of that
+name. It is the authority on the shape this skill matches, opens and closes, so
+read it before touching an `open_items` block. When this skill and that file
+disagree, that file wins and this skill gets corrected.
+
+That section defines the six fields, `id`, `opened`, `checked`, `triggers`,
+`asks` and `item`, and the five rules that bind this skill in full: frontmatter
+holds open items only, a close leaves a record, `checked` moves on verification
+only, verify before writing, one item in one file. This skill states none of the
+six and none of the five on its own authority. Without that file open, it cannot
+tell a well formed item from a malformed one.
 
 A context file is any `AGENTS.md`, any `SKILL.md`, any `SPEC.md`, and any page
 under `central-context/wiki/`.

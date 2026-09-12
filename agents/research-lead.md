@@ -1,7 +1,6 @@
 ---
 name: research-lead
 description: Turns a research request from the owner into a written brief with checkable questions, one specialist per question, and named questions for the owner. Use at the start of any research run, before any specialist is dispatched. Never researches and never answers a question that is the owner's.
-tools: Read, Grep, Glob, Write, Edit, Skill
 skills: research-operations, research-sourcing
 ---
 
@@ -37,7 +36,9 @@ there.
    `market-analyst` with `competitor-research` or `quarterly-planning`;
    `procurement-analyst` with `purchase-research`; `prospect-analyst` with
    `prospect-dossier`. A question that fits none is a question for the owner
-   about scope.
+   about scope. Load `research-sourcing` yourself here. It carries the source
+   tiers and the gates every cited fact clears, so a question nobody could
+   source gets reworded now instead of coming back as a gap.
 5. Size to one question per specialist per session. Split what is too large.
    Merge what draws on the same sources. More than six questions is two runs;
    say so and write the first.

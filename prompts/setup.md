@@ -1,10 +1,16 @@
 # Setup
 
-Paste this whole file into Claude Code, running from the workbench root, the
-first time you open a fresh clone. It is written for the agent, not for you.
-You will be asked questions; answering them is the work.
+Paste this whole file into your harness at the start of a session, running from
+the workbench root, the first time you open a fresh clone. A harness is the
+program that runs the agent loop and reads these files. This file is written for
+the agent, not for you. You will be asked questions, and answering them is the
+work.
 
 Nothing below runs by itself. Do it in order, and stop where it says stop.
+
+The template ships no permission rules, so every approval prompt you see while
+this runs is your own machine asking you. Answering one, or writing a rule that
+stops it asking, is yours to decide.
 
 ---
 
@@ -33,10 +39,56 @@ An empty result is the finish line for stages 1 to 4. There are ten: eight in
 
 ---
 
-## Stage 0: point the remote somewhere else
+## Stage 0: the harness, then the remote
 
-`origin` is the template. Anything pushed there goes to the template, not to
-this workbench.
+**1. Which harness does the owner run?** Ask this before anything else. The
+answer decides what wiring the tree needs and what it looks like when this stage
+is done, so nothing else starts until you have it.
+
+The neutral core is what you cloned: the entrypoint, the knowledge base, the
+skills, the roles, the scripts, and this file. It names no harness. Every
+harness-specific path lives in one thin adapter under `adapters/`, and
+`adapters/README.md` is the index. It lists the adapters that exist and carries
+the support matrix, one row per harness. Read it with the owner before you answer
+this question. One adapter exists today. Take the current list from that index
+and not from this file, because this file goes stale first.
+
+Three outcomes, and each one is a legitimate end to this step:
+
+- **An adapter exists for their harness.** Install it exactly as that adapter's
+  `README.md` gives it, running from the workbench root.
+- **Their harness needs no adapter.** A harness that reads `AGENTS.md` at session
+  start loads the entrypoint with nothing installed. Role discovery and skill
+  discovery may still need wiring. Take those paths from the harness's own
+  documentation, never from memory, and write an adapter if it needs one.
+- **No adapter exists for their harness.** Adding one is one directory under
+  `adapters/` and one row in the support matrix, and `adapters/README.md` says
+  how. Every path in it comes from that harness's own documentation, with the URL
+  and the date you read it. Root rule 4 binds here.
+
+Record the harness and the adapter path as the first item in this session's
+report. Stage 5 logs it as a decision.
+
+**2. Make sure that the installer did what its README says.** An adapter
+installer prints one line per artifact. Read that output against the table in the
+adapter's `README.md`: every path the table names exists, and the run reported no
+error. Then:
+
+```bash
+git status --short
+```
+
+Nothing the installer created appears there. An adapter keeps its own output out
+of a commit with the per-clone exclude file, `.git/info/exclude`, and never with
+`.gitignore`, because the root `.gitignore` belongs to the neutral core and names
+no harness. If installer output does appear in `git status`, stop and read the
+adapter's `README.md` before you commit anything.
+
+The neutral core ships no symlink of its own, so a clone made from a zip download
+loses nothing. Every symlink in the tree is an installer's.
+
+**3. Point the remote somewhere else.** `origin` is the template. Anything
+pushed there goes to the template, not to this workbench.
 
 ```bash
 git remote -v
@@ -50,18 +102,7 @@ git remote -v
 ```
 
 If they have not made a repository yet, say so and leave `origin` alone rather
-than inventing a URL. Record it as the first item in this session's report.
-
-Confirm the four symlinks survived the clone. Git preserves them, a zip
-download does not:
-
-```bash
-ls -l CLAUDE.md central-context/CLAUDE.md .claude/agents .claude/skills
-```
-
-All four must be symlinks. If any is a regular file, delete it and recreate it:
-`ln -sf AGENTS.md CLAUDE.md`, `ln -sf AGENTS.md central-context/CLAUDE.md`,
-`ln -sf ../agents .claude/agents`, `ln -sf ../skills .claude/skills`.
+than inventing a URL. Record it in this session's report.
 
 ---
 
@@ -83,7 +124,7 @@ Then decide with them how the name enters the files. Two variants:
   Nothing to change. Costs nothing, reads slightly impersonally.
 - **Use their name everywhere.** One pass across `agents/` and `skills/`:
   `grep -rln 'the owner' --include='*.md' agents skills` finds every file.
-  Reads better; must be done in full or not at all.
+  Reads better. It must be done in full or not at all.
 
 Name both. Do not pick.
 
@@ -145,8 +186,16 @@ After any change:
 python3 scripts/check-roles.py
 ```
 
-Zero failures before you move on. Claude Code skips a malformed role file
-silently, so this script is the only thing that reports one.
+Zero failures before you move on. A harness skips a malformed role file in
+silence, so this script is the only thing that reports one.
+
+`scripts/model-registry.txt` ships with no values in it, and no role file names a
+model, so the model check never fires on the tree you cloned. You need the
+registry only if you add a `model:` value to a role file. A value that is not
+registered is reported as a question, not a failure, and the answer is either a
+typo in the role file or one new line in the registry saying what the value is
+and where you read it. Where an adapter maps each role to a model, that mapping
+is the better home for an identifier and the registry stays empty.
 
 ---
 
@@ -207,6 +256,32 @@ invent a source.
 
 ---
 
+## Stage 4A: prove the harness
+
+This stage runs the acceptance test for the harness recorded in stage 0 and
+records the result in the support matrix in `adapters/README.md`. It carries a
+letter so that the numbers of the stages around it do not move.
+
+**The test does not exist yet.** `scripts/harness-acceptance.py` is named in
+`scripts/README.md` as not built, and it is absent from the tree on 2026-09-11.
+So this stage has no command to run today. Do not improvise a substitute, and do
+not write a result into the support matrix from a reading of the files. A cell
+that reads `not tested` is correct. A cell that reads `verified` with no
+transcript behind it is a false claim.
+
+What the stage will be once the script lands: the test proves a harness by
+checking four surfaces, which are the entrypoint loading without being asked, one
+role dispatched, one skill loaded on demand, and one wiki operation completed end
+to end. Each result goes into that harness's row in the support matrix with the
+date of the run. A failing surface is a named finding in this session's report
+and not a reason to stop the setup, because the workbench still works on the
+surfaces that passed.
+
+Write this stage's commands from the script itself the first time you run it, and
+add the script's row to the table in `scripts/README.md`.
+
+---
+
 ## Stage 5: close out
 
 **1. No markers left.**
@@ -237,11 +312,53 @@ python3 scripts/check-roles.py
 work. Follow `wiki-open-items`: remove the item from the frontmatter, append
 the close line to `central-context/log.md`, and leave nothing struck through.
 
-**5. Log the decisions.** Anything the owner settled in stages 1 to 3 that a
+**5. Log the decisions.** Anything the owner settled in stages 0 to 3 that a
 future session would otherwise re-litigate earns a `DECISIONS.md` entry. The
-`scribe` writes those. Hand it the question, the variants, and their answer.
+harness from stage 0 is one of them. The `scribe` writes those. Hand it the
+question, the variants, and their answer.
 
-**6. Commit.** Branch, commit, open a draft pull request. Never commit directly
+**6. The neutral core stayed neutral.** This is the last check before the commit,
+and it has two halves. `scripts/check-neutral-core.py` is meant to run both. It
+does not exist on disk on 2026-09-12, so run both by hand until it lands.
+
+First, no file in the neutral core names a harness. The neutral core is
+`AGENTS.md`, `central-context/`, `skills/`, `agents/`, `scripts/`, `prompts/`,
+`DECISIONS.md`, `README.md` and `.gitignore`. `SPEC.md` belongs to that list too,
+and the template ships none, so nothing is missing while that file is absent.
+Grep those paths for every harness name and harness directory the adapter index
+carries, and build the pattern from that index rather than from memory.
+
+**The only output that passes is no output.** Run on the tree you cloned on
+2026-09-12, that grep printed nothing and exited 1. One hit is a defect, whatever
+file it is in and whichever harness it names. Fix it by moving the sentence into
+the adapter that owns it, or by rewriting it to name no harness.
+
+The `adapters/` path is not a harness name, and this check never greps for it. A
+neutral-core file may name that path, and any path below it, as often as it needs
+to: telling a reader where the wiring lives is the opposite of carrying the
+wiring. No count applies and no file is an exception. On the tree you cloned the
+neutral core mentions an adapter on 40 lines, 24 of them in this file, counted
+2026-09-12. That is a reading and not a budget, and this stage checks neither
+number.
+
+Second, deleting the adapters directory leaves a workbench that still passes its
+own checks. Run this against a copy. Never delete `adapters/` in the working
+tree:
+
+```bash
+rm -rf /tmp/neutral-core-check
+cp -R . /tmp/neutral-core-check
+rm -rf /tmp/neutral-core-check/adapters
+(cd /tmp/neutral-core-check && python3 scripts/check-roles.py)
+rm -rf /tmp/neutral-core-check
+```
+
+Zero failures and zero questions. Anything else means the neutral core depends on
+something an adapter carries, and the fix belongs in the neutral core: move the
+dependency into the adapter, or drop it. A question names a `model:` value that
+is not registered, and it counts against this check the same way a failure does.
+
+**7. Commit.** Branch, commit, open a draft pull request. Never commit directly
 to `main`. Root `AGENTS.md` carries the attribution lines.
 
 ---
@@ -251,6 +368,7 @@ to `main`. Root `AGENTS.md` carries the attribution lines.
 - Fill a `> FILL:` marker with a plausible answer instead of asking.
 - Write a filing deadline, a tax rate, a registry URL, or a rate benchmark from
   memory. Root rules 4 and 5 bind: retrieve it or record the gap.
+- Write a result into the support matrix that no run produced.
 - Pick one of two named variants on the owner's behalf. Root rule 8.
 - Delete a role or a skill because it looked unused. Ask.
 - Leave the placeholder pass half done.

@@ -7,20 +7,29 @@
 .DS_Store
 node_modules/
 
-# Obsidian workspace state: pane layout, scroll position, recent files. It
-# changes every session and nobody reads it. Uncomment per vault you open.
-# central-context/.obsidian/workspace.json
-# central-context/.obsidian/workspaces.json
+# The template ships no .obsidian/ directory, so these four rules match nothing
+# on a fresh clone. They are here for the vault you configure yourself, and they
+# stop a colleague's per-person state entering a commit once one of you does.
 
-# Installed Obsidian plugins and themes are third-party and reinstallable.
-# community-plugins.json stays tracked so the list of what to reinstall
-# survives without the code that implements it.
-# central-context/.obsidian/plugins/
-# central-context/.obsidian/themes/
+# Obsidian per-person view state: pane layout, scroll position, recent files,
+# and the graph view's zoom. Obsidian rewrites these under itself every session
+# and nobody reads them. The documentation names the first two: workspace.json
+# and workspaces.json "store the current workspace layout and update whenever
+# you open a new file" (https://obsidian.md/help/data-storage, retrieved
+# 2026-09-11). It documents no list of the other files in the configuration
+# folder, so graph.json is here on observation and not on a citation.
+.obsidian/workspace*.json
+.obsidian/graph.json
 
-# Session state, not configuration
-.claude/settings.local.json
-.claude/scheduled_tasks.lock
+# Obsidian plugins and themes are third-party code, reinstallable from inside
+# Obsidian, so no copy of either belongs in a commit. community-plugins.json is
+# not matched, so a vault that tracks it keeps the list of what to reinstall
+# without the code.
+.obsidian/plugins/
+.obsidian/themes/
+
+# A vault opened on a subdirectory keeps its own configuration folder. Repeat
+# the four lines above under that path when you open one.
 
 # Hook output. Nobody reads it.
 runs/

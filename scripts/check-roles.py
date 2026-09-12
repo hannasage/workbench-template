@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Check agent role files and skill files for the frontmatter Claude Code needs.
+"""Check agent role files and skill files for the frontmatter a harness needs.
+
+A harness is the program that runs the agent loop and reads these files.
 
 Run from the workbench root:
 
@@ -9,12 +11,12 @@ An optional argument checks a different tree, which is what the tests use:
 
     python3 scripts/check-roles.py /path/to/a/fixture/root
 
-Claude Code skips a malformed role file in silence, so this is the only thing
+A harness skips a malformed role file in silence, so this is the only thing
 that reports one.
 
 Roles, every `agents/*.md` except `README.md`:
 
-1. Frontmatter exists, and `---` is the first line of the file. Claude Code
+1. Frontmatter exists, and `---` is the first line of the file. A harness
    reads frontmatter only then; a leading blank line or a byte order mark turns
    the whole file into body text. A closing `---` at the end of the file with
    no trailing newline is fine.
@@ -22,7 +24,9 @@ Roles, every `agents/*.md` except `README.md`:
    hyphens.
 3. `description` is not empty. It is what the model routes on.
 4. `model`, if named, is in `scripts/model-registry.txt`. A value that is not
-   registered is reported as a question, never as an error. See below.
+   registered is reported as a question, never as an error. See below. No role
+   file here names a model, because a model identifier is a harness fact and
+   the neutral core holds none. This rule fires for a cloner who pins one.
 5. Every skill in `skills:` has a readable `skills/<name>/SKILL.md`. An
    entry of that name that is a directory or a dangling symlink is reported
    as such, not as a missing file.
@@ -77,7 +81,7 @@ MODEL_REGISTRY = "scripts/model-registry.txt"
 # This is an exemption from a published standard, not from a house convention.
 # The Agent Skills specification, https://agentskills.io/specification, read
 # 2026-09-11, states the `name` field "Must match the parent directory name".
-# A skill listed here does not conform. Claude Code invokes an installed skill
+# A skill listed here does not conform. A harness invokes an installed skill
 # by its directory name, so it still loads, but the file is non-conforming and
 # the exemption is a decision to tolerate that in somebody else's file rather
 # than a statement that the rule does not apply.

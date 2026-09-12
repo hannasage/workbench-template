@@ -1,10 +1,8 @@
 # AGENTS.md: central-context
 
-Repo entrypoint. It inherits `../CLAUDE.md` at the workbench root and adds what
+Repo entrypoint. It inherits `../AGENTS.md` at the workbench root and adds what
 is specific to this directory. On conflict, this file wins for wiki-specific
 rules and the root file wins for universal gates and identity.
-
-`CLAUDE.md` here is a symlink to this file.
 
 This file is the schema. It is the third layer of the pattern below, and it is
 meant to change. When a rule here stops matching how the wiki actually works,
@@ -55,7 +53,6 @@ names it by path.
 ```
 central-context/
   AGENTS.md              this file, the schema
-  CLAUDE.md              symlink to AGENTS.md
   index.md               the catalog, one line per page
   log.md                 append only, one line per operation
   raw/
@@ -126,6 +123,61 @@ kind of source, and the pages this ingest changed.
 
 One page holds one subject. When a page covers two, split it.
 
+### The two conventions
+
+Every page carries two things that plain markdown does not require. Both are
+mandatory, and neither is decoration.
+
+**Wikilinks.** A wikilink is a page name inside double square brackets, as in
+`[[branch-discipline]]`. The page schema above mandates them in `## Links`, and
+"The two flat files" below mandates one on every `index.md` page line. Both rules
+bind the pages this workbench has yet to write. Almost nothing that ships here
+carries a wikilink, because the wiki is empty until the first ingest. Two live
+links ship, one per rule, and they point at each other: `wiki/overview.md` links
+`[[index]]` in its `## Links` section, and `index.md` links `[[overview]]` on its
+one page line. That is the whole of the convention demonstrated rather than
+merely mandated. Every other pair of double square brackets under
+`central-context/` sits in a code span in this file, which makes it a quotation
+and not a link, checked 2026-09-12. Two of the five wiki
+skills depend on the convention. Check 1 in
+`wiki-lint` resolves every wikilink to exactly one file, and it counts the bare
+page name to do it. Step 2 in `wiki-query` follows the wikilinks out of a page to
+reach its neighbours, so a page with none is a page the query pass cannot walk
+from. Rewrite one as a CommonMark link and both stop working.
+
+**YAML page frontmatter.** The page schema above mandates it on every page in
+`wiki/`. The open items schema below is frontmatter as well, so the convention
+carries the unresolved questions and not only the pages.
+
+The owner settled both on 2026-09-11, and accepted one outside dependency on
+purpose. That dependency is Obsidian. It is free, it is in general use for
+reading markdown, and it resolves a wikilink and reads page frontmatter with no
+configuration. The template therefore ships no Obsidian configuration and needs
+none to read: "By default, due to its more compact format, Obsidian generates
+links using the Wikilink format" (`https://obsidian.md/help/links`, retrieved
+2026-09-12), so a wikilink on a page written after the clone resolves on the
+defaults.
+
+One manual check proves that the defaults are enough, and **nobody has run it.**
+Open a fresh clone as a vault. Add no configuration, keep the default theme,
+enable no community plugin. Write two pages under `wiki/`, link one to the other
+with a wikilink, and click it. It resolves to its target. The check is manual
+because nothing here drives Obsidian, and it stays unrun until somebody writes
+down the date they ran it.
+
+Two settings are the cloner's own to make. Leaving `Use [[Wikilinks]]` on, under
+**Settings > Files and links**, pins the links a later page generates to the form
+this schema mandates (`https://obsidian.md/help/links`, retrieved 2026-09-12).
+Setting `Default location for new notes` keeps a new note out of the vault root
+(same page and date). Attachments have their own setting, `Default location for
+new attachments`, documented on its own page as **Settings → Files & Links →
+Default location for new attachments**
+(`https://obsidian.md/help/attachments`, retrieved 2026-09-12).
+
+The dependency is narrow. The content is plain markdown, so any editor opens
+these files and any person reads them. Obsidian makes the links navigable. It
+does not make the files readable, because they already are.
+
 ---
 
 ## Open items schema
@@ -135,8 +187,8 @@ will find it. It lives in YAML frontmatter under `open_items`. This section is
 the authority; the `wiki-open-items` and `wiki-verify` skills run it.
 
 A context file carries them: any `AGENTS.md`, any `SKILL.md`, any `SPEC.md`.
-`CLAUDE.md` is a symlink to `AGENTS.md`, so it inherits. A wiki page states its
-own unknowns in `## Open questions` in the body instead.
+A second filename symlinked to one of those files inherits its items. A wiki
+page states its own unknowns in `## Open questions` in the body instead.
 
 ```yaml
 ---

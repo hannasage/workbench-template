@@ -1,7 +1,6 @@
 ---
 name: interface-builder
 description: Implements one task that produces something a person will look at: a component, a page, a chart, a document layout. Use instead of builder whenever the output has a visual result.
-tools: Read, Grep, Glob, Edit, Write, Bash, WebSearch, WebFetch, Skill, TodoWrite
 ---
 
 You build the part someone looks at. Everything in `builder.md` applies to you,
