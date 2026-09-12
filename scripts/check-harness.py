@@ -146,7 +146,12 @@ def check_generated(root, failures):
 # --- 4. the neutral core -----------------------------------------------------
 
 def load_patterns(root, failures):
+    """The compiled pattern, or None. No adapters directory at all is the
+    doctrine's delete test, and then there is nothing to scan for; an adapters
+    directory with no names file is a defect."""
     path = root / NAMES_FILE
+    if not (root / sync.ADAPTERS_DIR).is_dir():
+        return None
     if not path.is_file():
         failures.append(f"{NAMES_FILE}: missing")
         return None

@@ -106,6 +106,28 @@ call, or anything with no obvious undo.
 
 ---
 
+## How work runs
+
+**Code, and anything built.** The `superpowers` plugin, an open-source set of
+skills that carries an idea to a draft pull request: `brainstorming` turns an
+idea into a design, `writing-plans` turns the design into small tasks,
+`executing-plans` or `subagent-driven-development` builds them,
+`test-driven-development` and `verification-before-completion` bind every
+task, `requesting-code-review` reviews the result, and
+`finishing-a-development-branch` ends on a draft pull request. Describe the
+work and let it route. Do not write a specification or a plan by hand first.
+The plugin is installed per harness, not shipped here; each adapter's
+`README.md` under `adapters/` says how.
+
+**Research.** The six roles in `agents/`, run as the `research-operations`
+skill says. The main session orchestrates and no role writes the knowledge
+base.
+
+Nothing else runs through a role or a pipeline here. Work that fits neither is
+done in the main session, under the always-on rules.
+
+---
+
 ## Routing
 
 Read this file, then read only what the table sends you to.
@@ -114,6 +136,8 @@ Read this file, then read only what the table sends you to.
 |---|---|
 | Setting this workbench up for the first time | `prompts/setup.md` |
 | Which harnesses this workbench runs on, and how to wire one up | `adapters/README.md` |
+| Code: a feature, a fix, a script, a repo | the `superpowers` plugin, starting with its `brainstorming` skill |
+| Reviewing a diff before a pull request | the `superpowers` plugin's `requesting-code-review` skill |
 | What the workbench knows about a person, company, project, decision, or figure | the `wiki-query` skill, `skills/wiki-query/SKILL.md` |
 | A new source that needs to enter the knowledge base | the `wiki-ingest` skill, `skills/wiki-ingest/SKILL.md` |
 | Health check the knowledge base | the `wiki-lint` skill, `skills/wiki-lint/SKILL.md` |
@@ -166,6 +190,10 @@ A skill is discovered only when its directory sits directly under `skills/`
 with a `SKILL.md` inside it. Nesting one a level deeper disables it silently. A
 harness that discovers skills or roles at a path of its own gets that path from
 its adapter, per the routing table, and neither directory moves to suit it.
+What sits at that path is a tracked symlink or a generated file, declared by
+the adapter and checked by `python3 scripts/check-harness.py`. Edit `agents/`,
+`skills/` or `.mcp.json`, run `python3 scripts/sync-harness.py`, and never edit
+the copy.
 
 In `.gitignore`, a path with square brackets in it needs them escaped, because
 git reads `[...]` as a glob character class.
@@ -185,6 +213,9 @@ Run `python3 scripts/check-roles.py` before any commit that touches `agents/`
 or `skills/`. A harness skips a malformed role file in silence and nothing else
 catches it. Run `python3 scripts/check-open-items.py` before any commit that
 touches an `open_items` block. An item the script cannot read blocks nothing.
+Run `python3 scripts/check-harness.py` before any commit that touches
+`agents/`, `.mcp.json`, or anything under `adapters/`. A generated file that
+drifts from its source is a role that runs differently on two harnesses.
 
 > FILL: once the engineering standard is ingested, this section becomes a
 > summary and the wiki page becomes the authority. Name the page here.

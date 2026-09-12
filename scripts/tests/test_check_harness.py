@@ -176,6 +176,14 @@ class CheckHarnessTest(unittest.TestCase):
         (self.root / "adapters/harness-names.txt").unlink()
         self.assertIn("adapters/harness-names.txt: missing", check.run(self.root))
 
+    def test_a_tree_with_no_adapters_directory_at_all_passes(self):
+        """The doctrine's delete test: the neutral core passes its own checks
+        with adapters/ gone. No manifest declares nothing, and with no
+        directory there is no pattern to scan for."""
+        import shutil
+        shutil.rmtree(self.root / "adapters")
+        self.assertEqual(check.run(self.root), [])
+
     # -- the entrypoint size cap -----------------------------------------------
 
     def test_an_entrypoint_over_the_cap_is_named_with_both_sizes(self):

@@ -26,6 +26,8 @@ repo. Everything else is here.
 | `model-registry.txt` | Data, not a script. The values `check-roles.py` accepts in a role's `model:` field. It ships with no values in it | Read by `check-roles.py` |
 | `check-open-items.py` | Checks the `open_items` frontmatter of the context files | The workbench root: `python3 scripts/check-open-items.py` |
 | `open-items-files.txt` | Data, not a script. The context files `check-open-items.py` reads by default | Read by `check-open-items.py` |
+| `sync-harness.py` | Generates, per adapter manifest, the role files and the MCP tables a harness reads in its own format, from `agents/` and `.mcp.json` | The workbench root: `python3 scripts/sync-harness.py`, or `--check` to report and write nothing |
+| `check-harness.py` | Proves the wiring: every declared symlink, every skill and role reachable through it, every generated file current, no harness named in the neutral core, and the entrypoint under its size cap | The workbench root: `python3 scripts/check-harness.py` |
 
 ## check-roles.py
 
@@ -149,6 +151,42 @@ Four options:
 - `--today YYYY-MM-DD` sets the run date, for a test.
 - `--root PATH` sets the path findings print relative to.
 
+## sync-harness.py
+
+Every path, format identifier and harness fact it uses comes from
+`adapters/<id>/wiring.json`, so the script names no harness. A manifest's
+`roles` block names a registered format, the directory to write into, and a
+mapping file of extra per-role values; its `mcp` block names a format, the
+source `.mcp.json`, the path to write, and a hand-edited head to put first.
+The generated files are committed. Run the script after any edit to `agents/`,
+to `.mcp.json`, or to a mapping or head file, and commit what it wrote.
+
+`--check` writes nothing and exits 1 with one line per file that is missing,
+differs from its source, or has no source left. Exit 2 is an input the script
+cannot use, named on stderr: an unreadable manifest, a role with no
+frontmatter, a mapping naming a role that does not exist, a format nobody
+registered, or an MCP server the target format cannot express. It refuses
+rather than approximates, because a server rendered differently from its
+source is a server that works on one harness and silently not the other.
+
+## check-harness.py
+
+The one command that says whether a clone is wired. One line per failure,
+then `N failure(s)`, and the exit code is N capped at 125. It reads the same
+manifests as `sync-harness.py`, so an adapter is checked the moment its
+manifest exists.
+
+The harness-name scan reads `adapters/harness-names.txt`, strips every
+`adapters/<id>/...` path token from a line, and reports every remaining match
+in the ten permitted paths of the neutral core. Zero on a clean tree is the
+right answer: every sentence in the core that reaches an adapter carries a
+path and no harness name. A plain file where a symlink should be gets the
+Windows fix in its message.
+
+It proves wiring, not behaviour. Whether a harness loads the entrypoint,
+dispatches a role, or completes a wiki operation is the acceptance test below,
+which does not exist yet.
+
 ## Tests
 
 `tests/` holds the tests for every script here, one file per script. Run them
@@ -157,11 +195,9 @@ What each file covers is described in its script's module docstring and above.
 
 ## Not built yet
 
-The work that made this workbench harness-neutral plans three more scripts
-here: `generate-adapter-roles.py`, `check-neutral-core.py` and
-`harness-acceptance.py`. None of the three exists on disk on 2026-09-11, so
-this file does not say what they do. Add a table row for each one when it
-lands, written from the script itself.
+`harness-acceptance.py` does not exist on disk on 2026-09-12, so this file does
+not say what it does. Add its table row when it lands, written from the script
+itself.
 
 One thing about the acceptance test is settled and belongs here, because a
 reader who runs it will see failures and wonder whether the suite is broken. It

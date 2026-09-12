@@ -41,51 +41,43 @@ An empty result is the finish line for stages 1 to 4. There are ten: eight in
 
 ## Stage 0: the harness, then the remote
 
-**1. Which harness does the owner run?** Ask this before anything else. The
-answer decides what wiring the tree needs and what it looks like when this stage
-is done, so nothing else starts until you have it.
+**1. Prove the wiring.** Run this from the workbench root before anything
+else:
 
-The neutral core is what you cloned: the entrypoint, the knowledge base, the
-skills, the roles, the scripts, and this file. It names no harness. Every
-harness-specific path lives in one thin adapter under `adapters/`, and
-`adapters/README.md` is the index. It lists the adapters that exist and carries
-the support matrix, one row per harness. Read it with the owner before you answer
-this question. One adapter exists today. Take the current list from that index
-and not from this file, because this file goes stale first.
+```bash
+python3 scripts/check-harness.py
+```
 
-Three outcomes, and each one is a legitimate end to this step:
+`0 failure(s)` is the pass. The wiring for every supported harness is tracked
+in git, so there is nothing to install: the symlinks each harness discovers
+the tree through, and the files generated in each harness's own format, came
+with the clone. A failure names the file and the fix. The one a fresh clone
+can produce is a symlink checked out as a plain file, which happens on Windows
+without `core.symlinks` and on any zip download; the message says what to run.
+Do not continue with a failure standing.
 
-- **An adapter exists for their harness.** Install it exactly as that adapter's
-  `README.md` gives it, running from the workbench root.
-- **Their harness needs no adapter.** A harness that reads `AGENTS.md` at session
-  start loads the entrypoint with nothing installed. Role discovery and skill
-  discovery may still need wiring. Take those paths from the harness's own
-  documentation, never from memory, and write an adapter if it needs one.
+**2. Which harness does the owner run?** The neutral core is what you cloned:
+the entrypoint, the knowledge base, the skills, the roles, the scripts, and
+this file. It names no harness. Every harness-specific path lives in one thin
+adapter under `adapters/`, and `adapters/README.md` is the index: it lists the
+adapters that exist and carries the support matrix, one row per harness. Read
+it with the owner. Take the current list from that index and not from this
+file, because this file goes stale first.
+
+Two outcomes, and each one is a legitimate end to this step:
+
+- **An adapter exists for their harness.** Its `README.md` opens with the
+  steps for this harness: an optional plugin install, how to start the session,
+  and how to confirm the roles and skills loaded. Walk them.
 - **No adapter exists for their harness.** Adding one is one directory under
-  `adapters/` and one row in the support matrix, and `adapters/README.md` says
-  how. Every path in it comes from that harness's own documentation, with the URL
-  and the date you read it. Root rule 4 binds here.
+  `adapters/` with a manifest and a `README.md`, one row in the support
+  matrix, and a run of `python3 scripts/sync-harness.py`, and
+  `adapters/README.md` says how. Every path in it comes from that harness's
+  own documentation, with the URL and the date you read it. Root rule 4 binds
+  here.
 
 Record the harness and the adapter path as the first item in this session's
 report. Stage 5 logs it as a decision.
-
-**2. Make sure that the installer did what its README says.** An adapter
-installer prints one line per artifact. Read that output against the table in the
-adapter's `README.md`: every path the table names exists, and the run reported no
-error. Then:
-
-```bash
-git status --short
-```
-
-Nothing the installer created appears there. An adapter keeps its own output out
-of a commit with the per-clone exclude file, `.git/info/exclude`, and never with
-`.gitignore`, because the root `.gitignore` belongs to the neutral core and names
-no harness. If installer output does appear in `git status`, stop and read the
-adapter's `README.md` before you commit anything.
-
-The neutral core ships no symlink of its own, so a clone made from a zip download
-loses nothing. Every symlink in the tree is an installer's.
 
 **3. Point the remote somewhere else.** `origin` is the template. Anything
 pushed there goes to the template, not to this workbench.
@@ -173,10 +165,14 @@ After any change:
 
 ```bash
 python3 scripts/check-roles.py
+python3 scripts/sync-harness.py
 ```
 
-Zero failures before you move on. A harness skips a malformed role file in
-silence, so this script is the only thing that reports one.
+Zero failures from the first before you move on. A harness skips a malformed
+role file in silence, so this script is the only thing that reports one. The
+second regenerates the copy of each role that a harness reads in its own
+format; a role you edited or deleted has one, and `python3
+scripts/check-harness.py` fails until it is regenerated. Commit what it wrote.
 
 `scripts/model-registry.txt` ships with no values in it, and no role file names a
 model, so the model check never fires on the tree you cloned. You need the
@@ -247,27 +243,38 @@ invent a source.
 
 ## Stage 4A: prove the harness
 
-This stage runs the acceptance test for the harness recorded in stage 0 and
-records the result in the support matrix in `adapters/README.md`. It carries a
-letter so that the numbers of the stages around it do not move.
+This stage proves the harness recorded in stage 0 and records the result in
+the support matrix in `adapters/README.md`. It carries a letter so that the
+numbers of the stages around it do not move. It has two halves, and only the
+first can run today.
 
-**The test does not exist yet.** `scripts/harness-acceptance.py` is named in
-`scripts/README.md` as not built, and it is absent from the tree on 2026-09-11.
-So this stage has no command to run today. Do not improvise a substitute, and do
-not write a result into the support matrix from a reading of the files. A cell
-that reads `not tested` is correct. A cell that reads `verified` with no
-transcript behind it is a false claim.
+**First, the wiring.** Run `python3 scripts/check-harness.py` again, now that
+stages 1 to 3 have edited roles and skills. Zero failures. Then do the
+confirmation the adapter's `README.md` gives for this harness: open a session
+at the root and see the roles and the skills listed where that README says they
+appear. Write the date into the `Wiring` column of that harness's row in the
+support matrix, as `checked YYYY-MM-DD`, and into the "Wiring check" section
+of the adapter's `README.md`. That column records a check of files and a
+listing on screen, nothing more.
 
-What the stage will be once the script lands: the test proves a harness by
-checking four surfaces, which are the entrypoint loading without being asked, one
-role dispatched, one skill loaded on demand, and one wiki operation completed end
-to end. Each result goes into that harness's row in the support matrix with the
-date of the run. A failing surface is a named finding in this session's report
-and not a reason to stop the setup, because the workbench still works on the
-surfaces that passed.
+**Second, the behaviour. The test does not exist yet.**
+`scripts/harness-acceptance.py` is named in `scripts/README.md` as not built,
+and it is absent from the tree on 2026-09-12. So the four surface columns have
+no command to run today. Do not improvise a substitute, and do not write a
+result into a surface column from a reading of the files or from the listing
+above. A cell that reads `not tested` is correct. A cell that reads `verified`
+with no transcript behind it is a false claim.
 
-Write this stage's commands from the script itself the first time you run it, and
-add the script's row to the table in `scripts/README.md`.
+What that half will be once the script lands: the test proves a harness by
+checking four surfaces, which are the entrypoint loading without being asked,
+one role dispatched, one skill loaded on demand, and one wiki operation
+completed end to end. Each result goes into that harness's row in the support
+matrix with the date of the run. A failing surface is a named finding in this
+session's report and not a reason to stop the setup, because the workbench
+still works on the surfaces that passed.
+
+Write that half's commands from the script itself the first time you run it,
+and add the script's row to the table in `scripts/README.md`.
 
 ---
 
@@ -290,11 +297,15 @@ grep -rn 'the owner\|the practice' --include='*.md' agents skills AGENTS.md | wc
 The count is either zero, or it is every occurrence. Anything between means the
 pass in stage 1 was partial. Finish it.
 
-**3. Roles and skills load.**
+**3. Roles and skills load, and every harness copy is current.**
 
 ```bash
 python3 scripts/check-roles.py
+python3 scripts/check-harness.py
+python3 scripts/check-open-items.py
 ```
+
+Zero failures from each.
 
 **4. Close the open item.** `AGENTS.md` carries
 `open_items: workbench-not-specialised`. It closes by work, and this was the
@@ -307,28 +318,22 @@ harness from stage 0 is one of them. Write each entry with the question, the
 variants, and their answer.
 
 **6. The neutral core stayed neutral.** This is the last check before the commit,
-and it has two halves. `scripts/check-neutral-core.py` is meant to run both. It
-does not exist on disk on 2026-09-12, so run both by hand until it lands.
+and it has two halves.
 
 First, no file in the neutral core names a harness. The neutral core is
 `AGENTS.md`, `central-context/`, `skills/`, `agents/`, `scripts/`, `prompts/`,
 `DECISIONS.md`, `README.md` and `.gitignore`. `SPEC.md` belongs to that list too,
 and the template ships none, so nothing is missing while that file is absent.
-Grep those paths for every harness name and harness directory the adapter index
-carries, and build the pattern from that index rather than from memory.
+`python3 scripts/check-harness.py`, which item 3 ran, scans those paths for
+every pattern in `adapters/harness-names.txt` and reports each hit with its
+file and line. One hit is a defect, whatever file it is in and whichever
+harness it names. Fix it by moving the sentence into the adapter that owns it,
+or by rewriting it to name no harness.
 
-**The only output that passes is no output.** Run on the tree you cloned on
-2026-09-12, that grep printed nothing and exited 1. One hit is a defect, whatever
-file it is in and whichever harness it names. Fix it by moving the sentence into
-the adapter that owns it, or by rewriting it to name no harness.
-
-The `adapters/` path is not a harness name, and this check never greps for it. A
-neutral-core file may name that path, and any path below it, as often as it needs
-to: telling a reader where the wiring lives is the opposite of carrying the
-wiring. No count applies and no file is an exception. On the tree you cloned the
-neutral core mentions an adapter on 40 lines, 24 of them in this file, counted
-2026-09-12. That is a reading and not a budget, and this stage checks neither
-number.
+The `adapters/` path is not a harness name, and the scan strips it before it
+matches. A neutral-core file may name that path, and any path below it, as
+often as it needs to: telling a reader where the wiring lives is the opposite
+of carrying the wiring. No count applies and no file is an exception.
 
 Second, deleting the adapters directory leaves a workbench that still passes its
 own checks. Run this against a copy. Never delete `adapters/` in the working
@@ -338,11 +343,13 @@ tree:
 rm -rf /tmp/neutral-core-check
 cp -R . /tmp/neutral-core-check
 rm -rf /tmp/neutral-core-check/adapters
-(cd /tmp/neutral-core-check && python3 scripts/check-roles.py)
+(cd /tmp/neutral-core-check && python3 scripts/check-roles.py && python3 scripts/check-harness.py)
 rm -rf /tmp/neutral-core-check
 ```
 
-Zero failures and zero questions. Anything else means the neutral core depends on
+Zero failures and zero questions from the first, and zero failures from the
+second, which with no adapter left has nothing to declare and no pattern to
+scan for. Anything else means the neutral core depends on
 something an adapter carries, and the fix belongs in the neutral core: move the
 dependency into the adapter, or drop it. A question names a `model:` value that
 is not registered, and it counts against this check the same way a failure does.

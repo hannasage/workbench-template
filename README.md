@@ -14,10 +14,11 @@ workbench/
   AGENTS.md            the entrypoint. Read at the start of every session
   DECISIONS.md         append-only decision log
   .gitignore           project repos you nest here stay untracked
-  adapters/            one thin adapter per harness
-  agents/              14 role definitions, all examples
+  .mcp.json            MCP servers, the one source every harness is wired from. Empty
+  adapters/            one thin adapter per harness: a manifest, a README, and nothing else
+  agents/              6 research role definitions, all examples
   skills/              12 skills: five that run the wiki, seven that run research
-  scripts/             check-roles.py, its tests, and anything else executable
+  scripts/             the checks and the generator, with their tests
   prompts/             setup.md, and prompts you paste in on purpose
   central-context/     the knowledge base
     raw/               sources, immutable, written by a person
@@ -54,12 +55,21 @@ old, which is the failure that actually happens.
 ```bash
 git clone https://github.com/hannasage/workbench-template.git my-workbench
 cd my-workbench
+python3 scripts/check-harness.py
 ```
 
-Start your agent in that directory, then paste `prompts/setup.md` into the
-session. It interviews you, fills in every placeholder, walks you through which
-example roles to keep, and ingests your first real source so you have seen the
-loop run once.
+`0 failure(s)` means every supported harness is wired: the symlinks and
+generated files each one discovers the tree through are tracked in git, so
+there is nothing to install. On Windows, clone with
+`git clone -c core.symlinks=true`, and never use a zip download, which
+flattens a symlink into a text file. The check names the fix if it finds one.
+
+Open your harness at that directory. Two optional steps per harness, an
+optional plugin and a confirmation that the surfaces loaded, are in its
+adapter's `README.md` under `adapters/`. Then paste `prompts/setup.md` into
+the session. It interviews you, fills in every placeholder, walks you through
+which example roles to keep, and ingests your first real source so you have
+seen the loop run once.
 
 Setup takes one sitting. Skipping it leaves a workbench that describes someone
 else's business.
@@ -72,12 +82,18 @@ it yet. The entrypoint, the knowledge base, the skills and the roles name none o
 them, and each harness gets a thin adapter that holds only its own wiring: how it
 discovers a skill, how it spells a role, which model it points at, and what
 happened the last time somebody ran it. The directory listed above is the place
-to look, and one routing row in `AGENTS.md` points there. Nothing else in this
-tree carries that wiring.
+to look, and one routing row in `AGENTS.md` points there.
 
-One adapter ships today. Every surface cell in the support matrix there reads
-`not tested` or `no adapter`, read 2026-09-12, so what is built is the structure
-and not a proven run.
+The wiring itself is tracked: a symlink where a harness looks for skills or
+roles, and, where a harness spells a role or an MCP server its own way, a file
+`scripts/sync-harness.py` generates from `agents/` and `.mcp.json`. Edit the
+source and run the generator; never edit the copy. `scripts/check-harness.py`
+proves every link and every generated file, and fails if a file in the neutral
+core names a harness.
+
+Two adapters ship today, and their wiring checks clean, read 2026-09-12. Every
+surface cell in the support matrix there still reads `not tested`, so what is
+built is the structure and not a proven run.
 
 ## The vault configuration is yours
 
@@ -158,9 +174,9 @@ surface it.
 
 ## Requirements
 
-- Python 3 for `scripts/check-roles.py`
-- Git
-- An agent harness, and the adapter for it
+- Python 3 for the scripts under `scripts/`
+- Git, with symlinks enabled, which is the default everywhere but Windows
+- An agent harness that one of the adapters covers, or a few hours to add one
 
 No build step, no dependencies, no install.
 
@@ -173,3 +189,6 @@ No build step, no dependencies, no install.
 - Run `python3 scripts/check-roles.py` before any commit touching `agents/` or
   `skills/`. A malformed role file is skipped in silence, so the script is the
   only thing that will tell you.
+- After any edit to `agents/` or `.mcp.json`, run `python3 scripts/sync-harness.py`
+  and commit what it wrote. `python3 scripts/check-harness.py` fails until you
+  do.
