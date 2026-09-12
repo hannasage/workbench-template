@@ -1,72 +1,89 @@
 # Claude Code adapter
 
 Claude Code is the one harness in the candidate set that does not read
-`AGENTS.md`, so the workbench root carries no file for it. This directory holds
-that wiring and nothing else. Delete the directory and the workbench still
-works on every other harness.
+`AGENTS.md`, so the workbench root carries a symlink for it. This directory
+holds the manifest that declares that wiring, and nothing else. Delete the
+directory and the workbench still works on every other harness, because the
+symlinks it declares are tracked in git and need no installer.
 
-## Install
+## Getting started on this harness
 
-Run this from the workbench root:
+1. Clone the workbench and run the wiring check from its root:
 
-```bash
-bash adapters/claude-code/install.sh
-```
+   ```bash
+   python3 scripts/check-harness.py
+   ```
 
-The installer prints one line per artifact. Running it twice changes nothing.
-Run from any other directory, it writes nothing and exits 1.
+   `0 failure(s)` means every symlink this adapter declares is in place. On
+   Windows, clone with `git clone -c core.symlinks=true` first, and never use
+   a zip download, which flattens a symlink into a text file. The check names
+   the fix if it finds one.
 
-## What the installer creates
+2. Optional: install the plugin that carries code and design work. The
+   workbench routes that work to `superpowers` in `AGENTS.md` under "How work
+   runs". From a shell, at user scope:
+
+   ```bash
+   claude plugin install superpowers@claude-plugins-official
+   ```
+
+   `claude plugin install` "installs to user scope unless you pass `--scope`"
+   and loads "the next time you start Claude Code"
+   (`https://code.claude.com/docs/en/discover-plugins`, retrieved 2026-09-12).
+   Skip this step if the owner does not build software here.
+
+3. Start a session at the workbench root:
+
+   ```bash
+   claude
+   ```
+
+   A session must start at the root, or the entrypoint does not load. See
+   "The instruction filename and its load order" below.
+
+4. Confirm the three surfaces loaded. `/context` lists `CLAUDE.md` under
+   memory files and the six roles under custom agents ("check that agents
+   appear in `/context` under Custom Agents",
+   `https://code.claude.com/docs/en/plugins`, retrieved 2026-09-12). `/plugin`
+   shows the plugin from step 2 if you installed it. The twelve skills load on
+   demand when a request matches a description; ask for a wiki lint to see one
+   fire.
+
+5. Paste `prompts/setup.md` into the session. It walks the specialisation
+   pass and ends by running the checks above again.
+
+## What this adapter declares
+
+`wiring.json` beside this file names three symlinks. `scripts/check-harness.py`
+reads it and proves each one exists, points where it says, and reaches every
+skill and role.
 
 | Path | What it is | Source | Retrieved |
 |---|---|---|---|
 | `CLAUDE.md` | Symlink to `AGENTS.md`. The documentation states "Claude Code reads `CLAUDE.md`, not `AGENTS.md`" and gives `ln -s AGENTS.md CLAUDE.md` as the bridge when no harness-specific content is wanted | `https://code.claude.com/docs/en/memory` | 2026-09-11 |
-| `.claude/` | The plain directory the next two symlinks live in, created only when it is absent, which is why the installer prints it as a line of its own. It is not a symlink and it holds nothing else | `https://code.claude.com/docs/en/sub-agents` | 2026-09-11 |
 | `.claude/agents` | Symlink to `agents/`. Project subagents are discovered in `.claude/agents/`, scanned recursively, walking up from the working directory | `https://code.claude.com/docs/en/sub-agents` | 2026-09-11 |
 | `.claude/skills` | Symlink to `skills/`. Project skills are discovered at `.claude/skills/<skill-name>/SKILL.md` | `https://code.claude.com/docs/en/skills` | 2026-09-11 |
-| Two lines in `.git/info/exclude` | `/CLAUDE.md` and `/.claude/`, so nothing the installer creates can be committed back into the neutral core. The second pattern also covers the two session-state files the harness writes by itself: `.claude/settings.local.json`, documented as "You, in this one project only", and `.claude/scheduled_tasks.lock`, which the documentation does not mention | `https://code.claude.com/docs/en/settings` | 2026-09-11 |
 
-The installer writes to the per-clone exclude file rather than to the root
-`.gitignore`, because a nested `.gitignore` cannot ignore a path at the
-repository root and the root `.gitignore` belongs to the neutral core, which
-names no harness. The exclude file is per-clone and is never committed, so an
-installed workbench still reports a clean tree. The installer asks git for
-`--git-common-dir` and not `--git-dir`, because inside a linked worktree the
-second one names a per-worktree directory that git does not read ignore
-patterns from, and the patterns would be written where they do nothing.
+Beside the two symlinks, `.claude/.gitignore` keeps the two files this
+harness writes during a session out of every commit: `settings.local.json`,
+documented as "You, in this one project only", and `scheduled_tasks.lock`,
+which the documentation does not mention
+(`https://code.claude.com/docs/en/settings`, retrieved 2026-09-11). It also
+ignores `worktrees/`, which the harness creates under `.claude/` for an
+isolated session. A nested ignore file can ignore paths inside its own
+directory, so the root `.gitignore` in the neutral core stays free of any
+harness name.
 
-On Windows a symlink needs Administrator rights or Developer Mode. The
-documentation gives an import as the alternative there: a hand-written
-`CLAUDE.md` holding the line `@AGENTS.md`. The installer does not create that
-file (`https://code.claude.com/docs/en/memory`, retrieved 2026-09-11).
+The neutral role files in `agents/` are valid subagents as they stand: `name`,
+`description` and `skills` are all documented frontmatter fields. This adapter
+therefore generates nothing and carries no mapping file. A `tools:` or
+`model:` value, if the owner wants one, is a decision for this workbench and
+goes in the role file, where `scripts/check-roles.py` checks it.
 
-## What the installer no longer creates, and what it cost
-
-The table above names three symlinks. The setup before this adapter existed
-checked four, and the fourth was `central-context/CLAUDE.md`, a symlink to the
-schema file beside it. It was deleted when the workbench root stopped
-privileging this harness, and nothing recreates it. Confirmed 2026-09-12 by
-running the installer against a fresh clone and reading its output: it creates
-the symlinks `CLAUDE.md`, `.claude/agents` and `.claude/skills`, the directory
-that holds the last two, and the two exclude lines. There is no fourth
-symlink.
-
-What that symlink did is worth stating, because losing it is the one concrete
-loss on this harness. A subdirectory instruction file loads on demand when the
-harness reads a file in that directory, per the load order above. So a session
-that opened anything under `central-context/` used to be handed the page schema
-by the harness, with nobody asking for it. Now it is not.
-
-What delivers the schema instead: the routing row in `AGENTS.md` that names
-`central-context/AGENTS.md` by path, and each of the five wiki skills naming
-that file as a required read before its first write. That is the `reference`
-mechanism, and the section below carries the decision behind it and the risk
-the owner accepted. This paragraph is the same risk written at the place a
-reader counts artifacts.
-
-The decision stands. Do not restore the file and do not add a fourth symlink: a
-per-directory instruction file for one harness inside the knowledge base is the
-privilege this adapter exists to remove.
+MCP servers come from `.mcp.json` at the workbench root, which this harness
+reads directly. It ships empty. Add a server there and every harness whose
+adapter generates an MCP block picks it up on the next run of
+`scripts/sync-harness.py`.
 
 ## Permissions
 
@@ -126,6 +143,10 @@ imports recurse to a maximum depth of four hops
 (`https://code.claude.com/docs/en/memory`, retrieved 2026-09-11). The support
 matrix value for this adapter's schema column is therefore `reference`.
 
+There is no `central-context/CLAUDE.md`. A per-directory instruction file for
+one harness inside the knowledge base is the privilege this adapter exists to
+remove. Do not add one.
+
 ## Model
 
 Claude models only. Anthropic "doesn't support routing Claude Code to
@@ -135,6 +156,12 @@ self-hosted half of the ask belongs to the other adapters.
 
 This adapter ships no configuration file, so it names no model identifier at
 all.
+
+## Wiring check
+
+`python3 scripts/check-harness.py` ran clean on this adapter's three symlinks
+on 2026-09-12, on the tree this file was committed in. That proves the wiring,
+not the behaviour below.
 
 ## Acceptance surfaces
 
@@ -168,9 +195,9 @@ from and fails any path outside the workbench.
 ## Removing the adapter
 
 ```bash
-rm CLAUDE.md .claude/agents .claude/skills
-rmdir .claude
+git rm CLAUDE.md .claude/agents .claude/skills .claude/.gitignore
+git rm -r adapters/claude-code
 ```
 
-The two patterns stay in `.git/info/exclude` until they are deleted by hand.
-They are per-clone and are never committed.
+`scripts/check-harness.py` then has no manifest for this harness and checks
+nothing for it.
