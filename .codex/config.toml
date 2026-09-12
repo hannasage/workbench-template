@@ -1,0 +1,14 @@
+# Project-scoped Codex configuration. This file is the hand-edited head of
+# .codex/config.toml; scripts/sync-harness.py copies it there and appends the
+# [mcp_servers.*] tables it generates from .mcp.json below a marker line.
+# Edit here, never in .codex/config.toml.
+#
+# Codex loads a project-scoped config.toml only for a project you have marked
+# trusted. Provider keys such as model_provider and openai_base_url are ignored
+# in project scope and belong in ~/.codex/config.toml
+# (https://learn.chatgpt.com/docs/config-file/config-reference, retrieved
+# 2026-09-11).
+#
+# This head ships empty. Uncomment or add project settings here.
+
+# --- generated from .mcp.json by scripts/sync-harness.py; do not edit below ---
