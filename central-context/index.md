@@ -12,4 +12,4 @@ first line under it.
 
 ## Domain overviews
 
-- `wiki/overview.md` maps the domains
+- [[overview]] maps the domains

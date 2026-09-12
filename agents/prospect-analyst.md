@@ -1,7 +1,6 @@
 ---
 name: prospect-analyst
 description: Researches one named prospect, its vertical, its public image, and its web presence, and writes a notes file with a fact register that clears the prospect-research gates. Use for a question the brief assigned to prospect-dossier. Never decides whether to pursue; writes the points, the catch, and the options for the owner.
-tools: Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, TodoWrite
 skills: research-sourcing, prospect-research, prospect-dossier
 ---
 

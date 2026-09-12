@@ -1,7 +1,18 @@
 # Accepted values for the `model:` field in an agent role file.
 #
 # One value per line. Blank lines and lines starting with # are ignored.
-# Matching is exact and case-sensitive.
+# Matching is exact and case-sensitive. A value is accepted only when it is
+# listed here. The shape of a value is never checked, because no two harnesses
+# spell a model the same way, and a pattern would refuse a spelling somebody's
+# harness accepts. A harness is the program that runs the agent loop and reads
+# these files.
+#
+# The file ships with no values in it. No role file here names a model, because
+# a model identifier is a fact about one harness and one vendor, and the roles
+# are neutral. Fill this in with the identifiers your own harness accepts,
+# taken from that harness's own documentation, the first time a role pins one.
+# Where an adapter maps each role to a model, that mapping is the better home
+# for an identifier, and this file stays empty.
 #
 # check-roles.py reads this file. A role naming a value that is not here is
 # not reported as an error. It is reported as a question, because the checker
@@ -12,47 +23,16 @@
 #   The value is a real model  -> add one line here, with a comment saying
 #                                 what it is and where you confirmed it.
 #
-# The aliases below are from the Claude Code subagent documentation,
-# https://code.claude.com/docs/en/sub-agents, read 2026-09-11. That page says a
-# full model ID is also accepted, and does not enumerate them or state a
-# grammar for one. That is why this file is a list and not a pattern: nothing
-# about the shape of a value separates a new model from a typo.
+# Every entry carries that comment. A bare identifier with no provenance is how
+# a registry rots: a year later nobody can say whether the value still works,
+# or who said it did. The form is one line:
 #
-# Each full ID below therefore carries its own provenance, per the rule above.
-
-# Aliases
-sonnet
-opus
-haiku
-fable
-
-# Take the model of the session that dispatched the role.
-inherit
-
-# Full Anthropic model IDs. The four below are the ones a Claude Code session
-# reported as current in its own environment on 2026-09-11. That is a weaker
-# source than the documentation and is stated as such: it is what one session
-# said on one day, not a published list.
-claude-opus-5
-claude-sonnet-5
-claude-fable-5-1
-claude-haiku-4-5-20251001
-# Both spellings of Haiku 4.5 are registered. A session reported the
-# date-suffixed form; the model reference lists the undated one. Registering
-# both costs a line and avoids blocking a commit over which is canonical.
-claude-haiku-4-5
-
-# Cloud-provider Anthropic-format IDs. Bedrock and Vertex publish their own
-# spelling of the same models. Register one here the first time a role pins it.
+#   <value>   # what it is, where it was confirmed, the date it was read
 #
-#   us.anthropic.claude-opus-4-8   # Bedrock, confirmed YYYY-MM-DD
-
-# A self-hosted or non-Anthropic model does not belong in this file, because it
-# does not belong in a role's `model:` field. Checked 2026-09-11 against
-# https://code.claude.com/docs/en/llm-gateway, which states that Anthropic does
-# not support routing Claude Code to non-Claude models through any gateway.
-# Running against other infrastructure is configured in the environment
-# instead: ANTHROPIC_BASE_URL, the ANTHROPIC_DEFAULT_*_MODEL variables, and the
-# Bedrock and Vertex switches. A role still names an alias such as `opus`, and
-# the environment decides where that resolves. Nothing in this file changes
-# that, either way.
+# Two shapes are worth knowing before you add one. A short alias, which the
+# harness resolves to whatever model it has configured, and a full identifier
+# that names one model exactly. Register either. Register both spellings when a
+# harness accepts a dated and an undated form of the same model, so that no
+# commit is blocked over which one is canonical.
+#
+# Entries go below this line.

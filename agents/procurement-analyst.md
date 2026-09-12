@@ -1,7 +1,6 @@
 ---
 name: procurement-analyst
 description: Researches one purchase question for the practice, hardware, software, subscription, or recurring cost, and writes a notes file with requirements, candidates, evidence, a cost model, and a fact register. Use for a question the brief assigned to purchase-research. Never picks the product; writes the variants and leaves the choice to the owner.
-tools: Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, TodoWrite
 skills: research-sourcing, purchase-research
 ---
 

@@ -36,17 +36,14 @@ _spec = importlib.util.spec_from_file_location("check_roles", SCRIPT_PATH)
 check_roles = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(check_roles)
 
-# A minimal registry covering the aliases and full IDs the spec's text names
-# by hand (fable among them), plus one clearly-fake value so tests can prove
-# an unregistered model is a question, not a failure.
+# A minimal registry of the two shapes a model value takes: a short alias, and
+# a full identifier with its dated spelling. Every value here is invented, so no
+# test depends on one vendor's product names, and the real registry ships with
+# no values at all.
 FIXTURE_REGISTRY = """
-sonnet
-opus
-haiku
-fable
-inherit
-claude-opus-5
-claude-sonnet-5
+alpha
+alpha-model-9
+alpha-model-9-20260101
 """.strip() + "\n"
 
 
@@ -278,10 +275,9 @@ class CheckRolesTest(unittest.TestCase):
     # -- 11 and 12: the registry-driven model check ----------------------------
 
     def test_registered_model_produces_nothing(self):
-        """Criterion 11: a model in the registry, including the alias 'fable',
-        is not reported at all."""
+        """Criterion 11: an alias in the registry is not reported at all."""
         root = self._base()
-        self._write(root, "agents/builder.md", role_md("builder", model="fable"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha"))
         failures, questions = check_roles.run(root)
         self.assertEqual(failures, [])
         self.assertEqual(questions, [])
@@ -289,7 +285,7 @@ class CheckRolesTest(unittest.TestCase):
     def test_registered_full_model_id_produces_nothing(self):
         """Criterion 11: a full model ID that is registered is not reported."""
         root = self._base()
-        self._write(root, "agents/builder.md", role_md("builder", model="claude-opus-5"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha-model-9"))
         failures, questions = check_roles.run(root)
         self.assertEqual(failures, [])
         self.assertEqual(questions, [])
@@ -298,36 +294,37 @@ class CheckRolesTest(unittest.TestCase):
         """Criterion 11 (registry-driven design): an unregistered value is a
         question, never a failure."""
         root = self._base()
-        self._write(root, "agents/builder.md", role_md("builder", model="sonnet-4-5"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha-model-8"))
         failures, questions = check_roles.run(root)
-        self.assertFalse(any("sonnet-4-5" in f for f in failures))
-        self.assertTrue(any("sonnet-4-5" in q for q in questions))
+        self.assertFalse(any("alpha-model-8" in f for f in failures))
+        self.assertTrue(any("alpha-model-8" in q for q in questions))
 
     def test_self_hosted_model_and_a_typo_are_treated_identically(self):
-        """Criterion 11 (registry-driven design): sonnet-4-5 (a plausible typo)
-        and qwen2.5-coder:32b (a real, unregistered local model) both land in
-        questions, by the same rule, because the checker cannot tell them apart."""
+        """Criterion 11 (registry-driven design): alpha-model-8 (a plausible typo
+        of a registered value) and local-model:32b (the tag form a self-hosted
+        model takes) both land in questions, by the same rule, because the
+        checker cannot tell them apart."""
         root = self._base()
-        self._write(root, "agents/builder.md", role_md("builder", model="sonnet-4-5"))
-        self._write(root, "agents/critic.md", role_md("critic", model="qwen2.5-coder:32b"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha-model-8"))
+        self._write(root, "agents/critic.md", role_md("critic", model="local-model:32b"))
         failures, questions = check_roles.run(root)
         self.assertEqual(failures, [])
-        typo_q = [q for q in questions if "sonnet-4-5" in q]
-        local_q = [q for q in questions if "qwen2.5-coder:32b" in q]
+        typo_q = [q for q in questions if "alpha-model-8" in q]
+        local_q = [q for q in questions if "local-model:32b" in q]
         self.assertEqual(len(typo_q), 1)
         self.assertEqual(len(local_q), 1)
         # Same message shape for both: only the role file and the model
         # value differ, never the wording that explains the question.
         explanation = lambda q: q.split(": ", 1)[1]
         shape = lambda q, model: explanation(q).replace(model, "MODEL")
-        self.assertEqual(shape(typo_q[0], "sonnet-4-5"), shape(local_q[0], "qwen2.5-coder:32b"))
+        self.assertEqual(shape(typo_q[0], "alpha-model-8"), shape(local_q[0], "local-model:32b"))
 
     def test_missing_registry_file_is_a_failure_and_stops_model_checking(self):
         """The registry-driven design: a missing registry file is a failure
         naming it, and no model value is checked against anything, so an
         otherwise-unregistered model produces no question either."""
         root = self._base(registry=None)
-        self._write(root, "agents/builder.md", role_md("builder", model="sonnet-4-5"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha-model-8"))
         failures, questions = check_roles.run(root)
         self.assertTrue(any(
             f.startswith("scripts/model-registry.txt") and "missing" in f
@@ -335,14 +332,20 @@ class CheckRolesTest(unittest.TestCase):
         ))
         self.assertEqual(questions, [])
 
-    def test_real_model_registry_documents_its_source_and_a_read_date(self):
+    def test_real_model_registry_states_the_two_rules_a_reader_needs(self):
         """Criterion 12, adapted to the registry-driven design: the file that
         now holds the accepted model values (scripts/model-registry.txt, in
-        place of an in-script constant) carries the documentation URL and a
-        date it was read."""
+        place of an in-script constant) states both rules a reader acts on.
+        A value is accepted only when it is listed, and an unlisted value is a
+        question. The file names no harness and no vendor, so it cites no
+        vendor's documentation and this test asks for none."""
         text = (WORKBENCH_ROOT / "scripts" / "model-registry.txt").read_text(encoding="utf-8")
-        self.assertIn("https://code.claude.com/docs/en/sub-agents", text)
-        self.assertRegex(text, r"read \d{4}-\d{2}-\d{2}")
+        # The file is wrapped prose in comments, so a phrase may straddle two
+        # lines. Flatten the comment markers and the whitespace before looking.
+        flat = " ".join(text.replace("#", " ").split())
+        self.assertIn("accepted only when it is listed", flat)
+        self.assertIn("reported as a question", flat)
+        self.assertIn("where you confirmed it", flat)
 
     # -- 13: agents/README.md is exempt from the frontmatter check -----------
 
@@ -374,7 +377,7 @@ class CheckRolesTest(unittest.TestCase):
         root = self._base()
         (root / "skills" / "empty-one").mkdir()
         (root / "skills" / "empty-two").mkdir()
-        self._write(root, "agents/builder.md", role_md("builder", model="sonnet-4-5"))
+        self._write(root, "agents/builder.md", role_md("builder", model="alpha-model-8"))
         code, _ = self._quiet_main(["check-roles.py", str(root)])
         self.assertEqual(code, 3)
 
@@ -627,23 +630,23 @@ class CheckRolesTest(unittest.TestCase):
 
     # -- the real registry's contents, not the script's logic -----------------
 
-    def test_real_model_registry_contains_the_values_criterion_11_names(self):
+    def test_every_value_in_the_real_registry_carries_a_comment(self):
         """Not a test of check-roles.py: a test of scripts/model-registry.txt
-        itself. Every model test above runs against FIXTURE_REGISTRY on
-        purpose, so deleting a line from the real file would leave all of
-        them green while criterion 11's sentence went false. This is the one
-        test that would catch that."""
+        itself. Every model test above runs against FIXTURE_REGISTRY, so
+        nothing else reads the real file. A bare identifier with no comment
+        passes the script and tells the next reader neither what it is nor
+        where it was confirmed, and this is the only thing that catches one.
+        The template ships no values, so this passes with nothing to check,
+        and it keeps holding for a cloner who registers their own."""
         text = (WORKBENCH_ROOT / "scripts" / "model-registry.txt").read_text(encoding="utf-8")
-        values = set()
         for line in text.splitlines():
-            line = line.split("#", 1)[0].strip()
-            if line:
-                values.add(line)
-        for name in ("sonnet", "opus", "haiku", "fable", "inherit"):
-            self.assertIn(name, values)
-        # Both Haiku 4.5 spellings are registered on purpose, not an oversight.
-        self.assertIn("claude-haiku-4-5", values)
-        self.assertIn("claude-haiku-4-5-20251001", values)
+            value = line.split("#", 1)[0].strip()
+            if not value:
+                continue
+            self.assertIn(
+                "#", line,
+                f"registered value '{value}' carries no comment saying what it "
+                f"is and where it was confirmed")
 
 
     def test_skill_name_over_64_characters_fails(self):

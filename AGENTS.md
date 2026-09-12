@@ -18,11 +18,15 @@ open_items:
 
 # AGENTS.md: the workbench
 
-Entrypoint. Read at the start of every session. Claude Code runs from this
+Entrypoint. Read at the start of every session. A session runs from this
 directory and from nowhere else, so this file loads every time and nothing
 below it does until the routing table sends you there.
 
-`CLAUDE.md` here is a symlink to this file.
+A harness is the program that runs the agent loop and reads these files. Five
+harnesses document reading a file of this name at session start, each checked
+at its own documentation on 2026-09-11. A harness that needs a different
+filename, or its own discovery path, gets both from its adapter. The routing
+table carries the row that leads there.
 
 This file is short on purpose. When it starts growing, that is the signal to
 move something into the wiki, not to add a section here.
@@ -109,23 +113,35 @@ Read this file, then read only what the table sends you to.
 | Task | Use |
 |---|---|
 | Setting this workbench up for the first time | `prompts/setup.md` |
-| What the workbench knows about a person, company, project, decision, or figure | the `wiki-query` skill |
-| A new source that needs to enter the knowledge base | the `wiki-ingest` skill |
-| Health check the knowledge base | the `wiki-lint` skill |
-| A context claim that may have gone stale, before a fact is embedded | the `wiki-verify` skill |
-| An open item: matching it, asking it, opening it, or closing it | the `wiki-open-items` skill |
+| Which harnesses this workbench runs on, and how to wire one up | `adapters/README.md` |
+| What the workbench knows about a person, company, project, decision, or figure | the `wiki-query` skill, `skills/wiki-query/SKILL.md` |
+| A new source that needs to enter the knowledge base | the `wiki-ingest` skill, `skills/wiki-ingest/SKILL.md` |
+| Health check the knowledge base | the `wiki-lint` skill, `skills/wiki-lint/SKILL.md` |
+| A context claim that may have gone stale, before a fact is embedded | the `wiki-verify` skill, `skills/wiki-verify/SKILL.md` |
+| An open item: matching it, asking it, opening it, or closing it | the `wiki-open-items` skill, `skills/wiki-open-items/SKILL.md` |
 | The wiki's layout, page types, frontmatter, or the open items schema | `central-context/AGENTS.md` |
-| Research on a market, a competitor set, a purchase, a prospect, or a quarterly plan | the `research-operations` skill, then the research roles in `agents/README.md` |
-| What a research role may cite, on any subject | the `research-sourcing` skill |
+| Research on a market, a competitor set, a purchase, a prospect, or a quarterly plan | the `research-operations` skill, `skills/research-operations/SKILL.md`, then the research roles in `agents/README.md` |
+| What a research role may cite, on any subject | the `research-sourcing` skill, `skills/research-sourcing/SKILL.md` |
 | What a delivery pipeline role does | `agents/README.md` |
 | A decision that was settled, and why | `DECISIONS.md` |
 | Writing code in a repo here | that repo's `AGENTS.md`, then its `SPEC.md` |
 
 > FILL: add a row for your house writing standard, your brand or visual
-> identity skill, and your engineering standard once each exists.
+> identity skill, and your engineering standard once each exists. Give each row
+> the file path as well as the name, as the rows above do.
+
+A row names a skill and its path because no harness is guaranteed to find the
+skill on its own. If nothing loads it for you, read the path.
 
 A question the wiki cannot answer is a reason to ingest the source that answers
 it, so the next session does not repeat the read.
+
+Two conventions bind every wiki page, and neither is guessable from the content.
+A page links with wikilinks, page names inside double square brackets, in its
+`## Links` section. A page carries YAML frontmatter. Both are mandatory. The
+page schema in `central-context/AGENTS.md` is the authority, and a session
+started here does not load that file by itself, so read it before you write a
+page.
 
 ---
 
@@ -137,8 +153,8 @@ project repos you nest here, which have their own remotes and are ignored.
 | Path | Holds | Git |
 |---|---|---|
 | `central-context/` | The knowledge base. An LLM wiki. Sources in `raw/`, compiled pages in `wiki/`, research deliverables in `docs/`. No code, ever | Root repo |
-| `skills/` | Installed skills, flat. `.claude/skills` is a symlink to it | Root repo |
-| `agents/` | Role definitions. `.claude/agents` is a symlink to it | Root repo |
+| `skills/` | Installed skills, flat | Root repo |
+| `agents/` | Role definitions, one file per role | Root repo |
 | `scripts/` | Everything executable that is not a skill's and not a project's | Root repo |
 | `prompts/` | Prompts a person pastes in on purpose. Not loaded by anything | Root repo |
 | `DECISIONS.md` | The append-only decision log. The `scribe` writes it | Root repo |
@@ -147,7 +163,9 @@ project repos you nest here, which have their own remotes and are ignored.
 > to `.gitignore` and to the `dirs` list in the `wiki-verify` skill.
 
 A skill is discovered only when its directory sits directly under `skills/`
-with a `SKILL.md` inside it. Nesting one a level deeper disables it silently.
+with a `SKILL.md` inside it. Nesting one a level deeper disables it silently. A
+harness that discovers skills or roles at a path of its own gets that path from
+its adapter, per the routing table, and neither directory moves to suit it.
 
 In `.gitignore`, a path with square brackets in it needs them escaped, because
 git reads `[...]` as a glob character class.
@@ -164,7 +182,7 @@ Run the repo's gates before every commit. In a Node repo that is `typecheck`,
 tests is a blocked commit.
 
 Run `python3 scripts/check-roles.py` before any commit that touches `agents/`
-or `skills/`. Claude Code skips a malformed role file silently and nothing else
+or `skills/`. A harness skips a malformed role file in silence and nothing else
 catches it.
 
 > FILL: once the engineering standard is ingested, this section becomes a
@@ -186,7 +204,7 @@ Three things fire, each on its own trigger, never because work happened:
 2. **The task matched an open item's `triggers`.** Put that item's `asks`
    question to the owner with named variants, then stop that thread until they
    answer. `wiki-open-items` says how.
-3. **A sub-agent returned a line starting `Context:`.** It reported a fact, a
+3. **A role returned a line starting `Context:`.** It reported a fact, a
    gap, or a contradiction and wrote nothing itself. Filing it is yours.
 
 A role never writes a context file. The main session does, because a role sees

@@ -1,7 +1,6 @@
 ---
 name: fact-checker
 description: Re-retrieves every fact in a research run's fact registers and writes CHECK.md with a verdict per fact. Use after every specialist has reported and before the research-editor starts. Changes nothing but CHECK.md and never adds a fact.
-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, Skill
 skills: research-sourcing
 ---
 

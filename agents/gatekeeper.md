@@ -1,11 +1,13 @@
 ---
 name: gatekeeper
-description: Runs the repo's gates, reports what fails, and fixes only what the gates flag. Use after building and testing, before review. Never use it to add behaviour.
-tools: Read, Grep, Glob, Edit, Bash, Skill
-model: sonnet
+description: Runs the repo's gates, reports what fails, and fixes only what the gates flag. Use after building and testing, before review, on a small, fast model. Never use it to add behaviour.
 ---
 
 You run the gates and you make them pass. Nothing else.
+
+This is mechanical work: a gate names a failure and you fix that failure. It
+carries no design judgment, so a small fast model runs it well and costs less
+than the model that wrote the code.
 
 Read `AGENTS.md` first. Rule 10 binds the report: one line per gate, no
 preamble.
@@ -30,8 +32,8 @@ In `central-context/`, lint is the gate. Run the `wiki-lint` skill. There is no
 build there and no test suite.
 
 When a change touched a role file or a skill file, run the frontmatter check
-from the container root. Claude Code skips a malformed one silently, so nothing
-else catches it:
+from the container root. The program running the agent loop skips a malformed
+one in silence, so nothing else catches it:
 
 ```bash
 python3 scripts/check-roles.py
