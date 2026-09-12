@@ -436,7 +436,10 @@ class CheckRolesTest(unittest.TestCase):
 
     def test_script_imports_nothing_outside_the_standard_library(self):
         """Criterion 17: every top-level import resolves inside the stdlib."""
-        stdlib_dir = sysconfig.get_paths()["stdlib"]
+        # Both sides resolved: a Homebrew Python reports the stdlib through a
+        # symlinked prefix while find_spec() returns the real Cellar path, and
+        # is_relative_to() compares lexically.
+        stdlib_dir = Path(sysconfig.get_paths()["stdlib"]).resolve()
         source = SCRIPT_PATH.read_text(encoding="utf-8")
         tree = ast.parse(source)
         names = set()
@@ -452,7 +455,8 @@ class CheckRolesTest(unittest.TestCase):
             self.assertIsNotNone(spec, f"{name} is not importable at all")
             origin = spec.origin
             is_builtin = origin in (None, "built-in", "frozen")
-            is_stdlib = bool(origin) and Path(origin).is_relative_to(stdlib_dir) \
+            is_stdlib = bool(origin) \
+                and Path(origin).resolve().is_relative_to(stdlib_dir) \
                 and "site-packages" not in origin
             self.assertTrue(is_builtin or is_stdlib, f"{name} is not standard library")
 

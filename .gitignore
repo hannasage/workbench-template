@@ -3,9 +3,10 @@
 # them escaped, because git reads [...] as a glob character class.
 # /example-app/
 
-# Editor and OS noise
+# Editor, OS, and interpreter noise
 .DS_Store
 node_modules/
+__pycache__/
 
 # The template ships no .obsidian/ directory, so these four rules match nothing
 # on a fresh clone. They are here for the vault you configure yourself, and they
