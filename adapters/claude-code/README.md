@@ -15,9 +15,14 @@ symlinks it declares are tracked in git and need no installer.
    ```
 
    `0 failure(s)` means every symlink this adapter declares is in place. On
-   Windows, clone with `git clone -c core.symlinks=true` first, and never use
-   a zip download, which flattens a symlink into a text file. The check names
-   the fix if it finds one.
+   Windows, turn on Developer Mode or run as Administrator, which is what a
+   symlink needs there, then clone with `git clone -c core.symlinks=true`.
+   Never use a zip download, which flattens a symlink into a text file. The
+   check names the fix if it finds one. The documented alternative on a
+   machine that cannot make symlinks is a hand-written `CLAUDE.md` holding
+   the line `@AGENTS.md` (`https://code.claude.com/docs/en/memory`, retrieved
+   2026-09-11); the check then reports that file as not a symlink, and the
+   role and skill links still need one.
 
 2. Optional: install the plugin that carries code and design work. The
    workbench routes that work to `superpowers` in `AGENTS.md` under "How work

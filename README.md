@@ -60,9 +60,10 @@ python3 scripts/check-harness.py
 
 `0 failure(s)` means every supported harness is wired: the symlinks and
 generated files each one discovers the tree through are tracked in git, so
-there is nothing to install. On Windows, clone with
-`git clone -c core.symlinks=true`, and never use a zip download, which
-flattens a symlink into a text file. The check names the fix if it finds one.
+there is nothing to install. On Windows, turn on Developer Mode or run as
+Administrator, then clone with `git clone -c core.symlinks=true`. Never use a
+zip download, which flattens a symlink into a text file. The check names the
+fix if it finds one.
 
 Open your harness at that directory. Two optional steps per harness, an
 optional plugin and a confirmation that the surfaces loaded, are in its

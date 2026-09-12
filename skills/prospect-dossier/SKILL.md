@@ -181,9 +181,10 @@ not.
 ## Rendering
 
 Both files are markdown and both are canonical. When the owner wants the handoff
-document as a branded artifact, that is a delivery pipeline task for
-`interface-builder`, under the workbench's brand skill if one is installed,
-with `handoff.md` as its specification. The research team does not render.
+document as a branded artifact, that is a build task for the code pipeline
+named under "How work runs" in `AGENTS.md`, under the workbench's brand skill
+if one is installed, with `handoff.md` as its specification. The research
+team does not render.
 
 Layout conventions the render follows:
 

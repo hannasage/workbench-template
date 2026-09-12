@@ -1,6 +1,6 @@
 ---
 name: wiki-open-items
-description: "Runs the open_items frontmatter across every context file: lists the items, matches their triggers to the work in hand, puts the asks question to the owner with named variants, and opens or closes items with a log line. Use at the start of any task, when work exposes a question nobody has settled, when the owner answers one, and when work closes one. Covers the item shape, the trigger match, the ask, the close, and what the scribe records. Route re-testing an old item against the disk to wiki-verify, and page health to wiki-lint."
+description: "Runs the open_items frontmatter across every context file: lists the items, matches their triggers to the work in hand, puts the asks question to the owner with named variants, and opens or closes items with a log line. Use at the start of any task, when work exposes a question nobody has settled, when the owner answers one, and when work closes one. Covers the item shape, the trigger match, the ask, the close, and what the log records. Route re-testing an old item against the disk to wiki-verify, and page health to wiki-lint."
 ---
 
 # Wiki Open Items
@@ -145,8 +145,9 @@ YYYY-MM-DD · open-items · <file>#<id> · closed by work: <what was done>
 YYYY-MM-DD · open-items · <file>#<id> · closed by the owner: <what they chose>
 ```
 
-When the owner decided, the `scribe` writes the `DECISIONS.md` entry. Hand it the
-question, the variants, and their answer. Do not write that entry yourself.
+When the owner decided, the main session writes the `DECISIONS.md` entry. Give
+it the question, the variants, and their answer. A role never writes that
+entry.
 
 **6. Wiki pages.**
 
@@ -189,4 +190,4 @@ method for connecting an open question to the work that answers it. The
   that contradict each other. Use `wiki-lint`.
 - Filing the source that answers a question. Use `wiki-ingest`.
 - Answering a question from the wiki. Use `wiki-query`.
-- Writing the `DECISIONS.md` entry. The `scribe` does that.
+- Writing the `DECISIONS.md` entry as a role. The main session does that.

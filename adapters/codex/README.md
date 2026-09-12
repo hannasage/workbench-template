@@ -24,9 +24,14 @@ clone needs no step between clone and session.
    workbench routes that work to `superpowers` in `AGENTS.md` under "How work
    runs". It is on the official Codex plugin marketplace: run `/plugins` in a
    session and install it from there (the plugin's own README, read
-   2026-09-12, gives this path for Codex CLI). Its subagent dispatch needs
-   `[features] multi_agent = true` in `~/.codex/config.toml`, per the same
-   README. Skip this step if the owner does not build software here.
+   2026-09-12, gives this path for Codex CLI). Its subagent dispatch uses the
+   multi-agent tools, which the plugin's Codex reference,
+   `skills/using-superpowers/references/codex-tools.md` in the plugin's own
+   tree, says to enable with `[features] multi_agent = true` in
+   `~/.codex/config.toml`; the configuration reference lists that feature as
+   on by default (`https://learn.chatgpt.com/docs/config-file/config-reference`,
+   retrieved 2026-09-12), so the line is a safeguard and not a requirement.
+   Skip this step if the owner does not build software here.
 
 3. Start a session at the workbench root and trust the project:
 
@@ -37,9 +42,10 @@ clone needs no step between clone and session.
    "Codex loads project-scoped config files only when you trust the project"
    (`https://learn.chatgpt.com/docs/config-file/config-reference`, retrieved
    2026-09-12). Trust is recorded as `projects.<path>.trust_level = "trusted"`
-   in the user-level configuration, and the harness offers it on first launch
-   in a new directory. Until the project is trusted, `.codex/config.toml` and
-   `.codex/agents/` are not read.
+   in the user-level configuration (same page and date). How the harness asks
+   for it is not on that page; if no prompt appears, write the key by hand.
+   Until the project is trusted, `.codex/config.toml` and `.codex/agents/`
+   are not read.
 
 4. Confirm the surfaces loaded. `/skills` lists the twelve skills, or type `$`
    to mention one ("In Codex CLI or the IDE extension, run `/skills` or type
