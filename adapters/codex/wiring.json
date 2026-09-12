@@ -1,0 +1,16 @@
+{
+  "links": {
+    ".agents/skills": "../skills"
+  },
+  "roles": {
+    "format": "toml-agent",
+    "dir": ".codex/agents",
+    "mapping": "roles.json"
+  },
+  "mcp": {
+    "format": "toml-mcp-servers",
+    "source": ".mcp.json",
+    "path": ".codex/config.toml",
+    "head": "config.toml"
+  }
+}
