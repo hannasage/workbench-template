@@ -133,14 +133,12 @@ and appears in the same files.
 
 **3. Rule 2, the writing standard.** Ask whether they have a writing standard
 skill to install. If they do, install it under `skills/<name>/SKILL.md` and
-name it in rule 2, then in the `skills:` frontmatter of `spec-writer.md`,
-`scribe.md`, and `research-editor.md`. If they do not, delete the `> FILL:`
-line and leave the plain-language rules that follow it standing. Say which you
-did.
+name it in rule 2, then in the `skills:` frontmatter of `research-editor.md`.
+If they do not, delete the `> FILL:` line and leave the plain-language rules
+that follow it standing. Say which you did.
 
 **4. Rule 3, interface and copy standards.** Same question for interface work
-and client-facing copy. If they install any, name them in rule 3 and in
-`agents/interface-builder.md`'s `skills:` frontmatter.
+and client-facing copy. If they install any, name them in rule 3.
 
 **5. Rule 9, the names that never appear in client-facing material.** Ask
 directly: are there employers, clients, or partners that must not be named in
@@ -156,26 +154,17 @@ project repo, also add its directory to `.gitignore` and to the `dirs` list in
 
 ## Stage 2: read the agent roles
 
-There are 14 in `agents/`, and every one of them is an example. Read
-`agents/README.md` first, then work the two tables in it.
+There are six in `agents/`, all research roles, and every one of them is an
+example. Read `agents/README.md` first, then work the table in it.
 
 For each role, put one question to the owner: keep, edit, or delete. Give them
 what they need to answer it in one line, not a summary of the whole file.
 
-Three roles carry opinions that are almost certainly wrong for a new workbench,
-so flag these specifically:
-
-- `agents/interface-builder.md` has a block headed "The rules that will fail
-  your work". Square corners, one accent under five percent of the area,
-  hairlines not shadows. That is one practice's house style. Ask whether to
-  keep it, replace it, or cut it to the accessibility rules alone, which are
-  the only ones in the list that are not taste.
-- `agents/test-writer.md` has a list of "things that have actually broken
-  before". That history is not this codebase's. Ask whether to keep it as a
-  starting heuristic or empty it.
-- `agents/builder.md` has four rules about secrets, prompts, schema validation
-  and `main`. They are sound defaults for a web codebase and meaningless for
-  anything else. Ask what this owner actually builds.
+Code and design work does not run through a role here. It runs through the
+plugin named under "How work runs" in `AGENTS.md`, which the owner installs on
+their harness following the adapter's `README.md`. If the owner does not build
+software in this workbench, say so in that section instead of leaving a
+pipeline nobody runs.
 
 Delete a role by deleting its file and its row in `agents/README.md`. Do not
 leave a row pointing at a file that is gone.
@@ -314,8 +303,8 @@ the close line to `central-context/log.md`, and leave nothing struck through.
 
 **5. Log the decisions.** Anything the owner settled in stages 0 to 3 that a
 future session would otherwise re-litigate earns a `DECISIONS.md` entry. The
-harness from stage 0 is one of them. The `scribe` writes those. Hand it the
-question, the variants, and their answer.
+harness from stage 0 is one of them. Write each entry with the question, the
+variants, and their answer.
 
 **6. The neutral core stayed neutral.** This is the last check before the commit,
 and it has two halves. `scripts/check-neutral-core.py` is meant to run both. It

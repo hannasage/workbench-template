@@ -8,8 +8,8 @@ Append-only decision log. Newest entries at the bottom. Entries are never
 edited or deleted. A reversal earns a new entry that supersedes the old one by
 date.
 
-The `scribe` role writes here. The rule for what belongs here is in
-`AGENTS.md` and in `agents/scribe.md`.
+The main session writes here, when the owner decides something. No role
+does. The rule for what belongs here is in `AGENTS.md`.
 
 An entry is warranted when a choice was settled that a future session would
 otherwise re-litigate. Routine work does not earn one. An open question does

@@ -122,7 +122,7 @@ Read this file, then read only what the table sends you to.
 | The wiki's layout, page types, frontmatter, or the open items schema | `central-context/AGENTS.md` |
 | Research on a market, a competitor set, a purchase, a prospect, or a quarterly plan | the `research-operations` skill, `skills/research-operations/SKILL.md`, then the research roles in `agents/README.md` |
 | What a research role may cite, on any subject | the `research-sourcing` skill, `skills/research-sourcing/SKILL.md` |
-| What a delivery pipeline role does | `agents/README.md` |
+| What a research role does | `agents/README.md` |
 | A decision that was settled, and why | `DECISIONS.md` |
 | Writing code in a repo here | that repo's `AGENTS.md`, then its `SPEC.md` |
 
@@ -157,7 +157,7 @@ project repos you nest here, which have their own remotes and are ignored.
 | `agents/` | Role definitions, one file per role | Root repo |
 | `scripts/` | Everything executable that is not a skill's and not a project's | Root repo |
 | `prompts/` | Prompts a person pastes in on purpose. Not loaded by anything | Root repo |
-| `DECISIONS.md` | The append-only decision log. The `scribe` writes it | Root repo |
+| `DECISIONS.md` | The append-only decision log. The main session writes it | Root repo |
 
 > FILL: add one row per project repo you nest here, and add its directory name
 > to `.gitignore` and to the `dirs` list in the `wiki-verify` skill.
