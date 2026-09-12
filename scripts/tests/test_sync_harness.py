@@ -15,6 +15,7 @@ import ast
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import sysconfig
@@ -371,10 +372,15 @@ class SyncHarnessTest(unittest.TestCase):
             self.assertTrue(is_builtin or is_stdlib, f"{name} is not standard library")
 
     def test_script_names_no_harness(self):
-        """scripts/ is in the neutral core. Every harness path comes from data."""
-        text = SCRIPT_PATH.read_text(encoding="utf-8").lower()
-        for token in ("claude", "codex", ".agents/"):
-            self.assertNotIn(token, text, f"{token!r} appears in the script")
+        """scripts/ is in the neutral core. Every harness path comes from data,
+        and the pattern this test applies comes from the names file, so the
+        test never has to name a harness either."""
+        names = WORKBENCH_ROOT / "adapters" / "harness-names.txt"
+        lines = [l.strip() for l in names.read_text(encoding="utf-8").splitlines()]
+        pattern = re.compile("|".join(f"(?:{l})" for l in lines if l and not l.startswith("#")),
+                             re.IGNORECASE)
+        for lineno, line in enumerate(SCRIPT_PATH.read_text(encoding="utf-8").splitlines(), 1):
+            self.assertIsNone(pattern.search(line), f"line {lineno} names a harness")
 
     def test_the_shipped_tree_is_current(self):
         """The committed generated files match their sources byte for byte."""
