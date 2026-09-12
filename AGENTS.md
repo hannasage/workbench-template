@@ -183,7 +183,8 @@ tests is a blocked commit.
 
 Run `python3 scripts/check-roles.py` before any commit that touches `agents/`
 or `skills/`. A harness skips a malformed role file in silence and nothing else
-catches it.
+catches it. Run `python3 scripts/check-open-items.py` before any commit that
+touches an `open_items` block. An item the script cannot read blocks nothing.
 
 > FILL: once the engineering standard is ingested, this section becomes a
 > summary and the wiki page becomes the authority. Name the page here.
