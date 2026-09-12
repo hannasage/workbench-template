@@ -217,6 +217,90 @@ class SyncHarnessTest(unittest.TestCase):
         sync.write(self.root)
         self.assertEqual(sync.write(self.root), ["unchanged: .x/agents/alpha.toml"])
 
+    # -- MCP servers ------------------------------------------------------------
+
+    MCP_MANIFEST = {
+        "links": {},
+        "mcp": {"format": "toml-mcp-servers", "source": ".mcp.json",
+                "path": ".x/config.toml", "head": "config.toml"},
+    }
+
+    def _mcp_tree(self, servers, head="# head line\n"):
+        self.fx.write("adapters/x/wiring.json", json.dumps(self.MCP_MANIFEST))
+        self.fx.write("adapters/x/config.toml", head)
+        self.fx.write(".mcp.json", json.dumps({"mcpServers": servers}))
+
+    @unittest.skipUnless(tomllib, "tomllib needs Python 3.11")
+    def test_local_server_maps_command_args_and_env(self):
+        self._mcp_tree({"local": {
+            "command": "npx", "args": ["-y", "some-server"], "env": {"TOKEN_FILE": "/tmp/t"}}})
+        text = sync.expected_outputs(self.root)[".x/config.toml"]
+        doc = tomllib.loads(text)
+        self.assertEqual(doc["mcp_servers"]["local"]["command"], "npx")
+        self.assertEqual(doc["mcp_servers"]["local"]["args"], ["-y", "some-server"])
+        self.assertEqual(doc["mcp_servers"]["local"]["env"], {"TOKEN_FILE": "/tmp/t"})
+
+    @unittest.skipUnless(tomllib, "tomllib needs Python 3.11")
+    def test_remote_server_maps_url_and_bearer_token_variable(self):
+        self._mcp_tree({"remote": {
+            "type": "http", "url": "https://example.test/mcp",
+            "headers": {"Authorization": "Bearer ${REMOTE_TOKEN}"}}})
+        doc = tomllib.loads(sync.expected_outputs(self.root)[".x/config.toml"])
+        self.assertEqual(doc["mcp_servers"]["remote"]["url"], "https://example.test/mcp")
+        self.assertEqual(doc["mcp_servers"]["remote"]["bearer_token_env_var"], "REMOTE_TOKEN")
+
+    def test_head_comes_first_then_the_marker_then_the_tables(self):
+        self._mcp_tree({"a": {"command": "c"}}, head="# my head\n")
+        text = sync.expected_outputs(self.root)[".x/config.toml"]
+        lines = text.splitlines()
+        self.assertEqual(lines[0], "# my head")
+        self.assertTrue(any("do not edit below" in l for l in lines))
+        self.assertLess(lines.index(next(l for l in lines if "do not edit below" in l)),
+                        lines.index("[mcp_servers.a]"))
+
+    def test_empty_source_yields_head_and_marker_only(self):
+        self._mcp_tree({})
+        text = sync.expected_outputs(self.root)[".x/config.toml"]
+        self.assertNotIn("[mcp_servers", text)
+        self.assertIn("do not edit below", text)
+
+    def test_missing_source_is_an_input_error_naming_it(self):
+        self._mcp_tree({})
+        (self.root / ".mcp.json").unlink()
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.expected_outputs(self.root)
+        self.assertIn(".mcp.json", str(ctx.exception))
+
+    def _rejects(self, servers, *needles):
+        self._mcp_tree(servers)
+        with self.assertRaises(sync.SyncError) as ctx:
+            sync.expected_outputs(self.root)
+        for needle in needles:
+            self.assertIn(needle, str(ctx.exception))
+
+    def test_rejects_expansion_in_a_local_server(self):
+        self._rejects({"s": {"command": "run", "env": {"K": "${HOME}/x"}}}, "'s'", "expansion")
+
+    def test_rejects_a_header_that_is_not_a_bearer_variable(self):
+        self._rejects({"s": {"type": "http", "url": "https://x", "headers": {"X-Key": "abc"}}},
+                      "'s'", "bearer_token_env_var")
+
+    def test_rejects_a_literal_bearer_token(self):
+        self._rejects({"s": {"type": "http", "url": "https://x",
+                             "headers": {"Authorization": "Bearer abc123"}}}, "'s'")
+
+    def test_rejects_an_unknown_key(self):
+        self._rejects({"s": {"command": "run", "timeout": 5}}, "'s'", "timeout")
+
+    def test_rejects_a_server_name_that_is_not_a_bare_toml_key(self):
+        self._rejects({"my server": {"command": "run"}}, "'my server'")
+
+    def test_rejects_a_local_server_with_no_command(self):
+        self._rejects({"s": {"args": ["x"]}}, "'s'", "command")
+
+    def test_rejects_an_unknown_type(self):
+        self._rejects({"s": {"type": "grpc", "url": "u"}}, "'s'", "grpc")
+
     # -- the command line -------------------------------------------------------
 
     def _cli(self, *args):
