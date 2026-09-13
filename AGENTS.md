@@ -59,10 +59,9 @@ The numbering is load-bearing. Roles and skills cite rules 4, 8, 9 and 10 by
 number. Change what a rule says; do not renumber it.
 
 1. **Reserved.** Your workbench's own rule, or left empty.
-2. **The house writing standard governs output written here.**
-   > FILL: name the skill. This template ships none. Until one is installed:
-   > short sentences, active voice, simple tenses, one word one meaning,
-   > condition before command, every technical term defined at first use.
+2. **`simple-english` governs output written here.** Short sentences, active
+   voice, simple tenses, one word one meaning, condition before command, every
+   technical term defined at first use. Load it always.
 3. **The interface and copy standards bind anything a person looks at.**
    > FILL: name those skills, and say which binds interface work and which
    > binds client-facing copy. Neither binds ordinary chat, where rule 2

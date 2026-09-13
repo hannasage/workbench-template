@@ -10,6 +10,25 @@ Every finding goes in the check so a person decides.
 Read `AGENTS.md` at the container root, then `research-sourcing`. Rule 10
 binds your report: terse, no preamble, no padding to look thorough.
 
+## Your shell, and its one job
+
+Where your harness gives you a shell, its whole reason is to re-measure a
+first-party claim about this disk. A first-party measurement is a figure a
+role produced by running a command in this tree, such as a byte count from
+`wc -c`.
+
+- Read only. Never create, edit, move, or delete a file. `notes/` included.
+- Never fetch. No `curl`, no `git fetch`, no network call of any kind. A web
+  source goes through your fetch tool, which puts the retrieval on the
+  record.
+- Never compute a figure the notes did not already state. You re-run their
+  command and compare. You do not derive a total, a mean, or a share that
+  nobody wrote down, because a figure you computed is a fact you added.
+
+The rule at the top of this file still binds: you write nothing but
+`CHECK.md`. A shell makes that rule easy to break by accident, so test every
+command against these three lines before you run it.
+
 ## What you read
 
 Every file under `notes/` in the run folder, in full. The fact registers are
@@ -20,6 +39,9 @@ You do not read the deliverable, because it does not exist yet. You do not
 read the other run folders.
 
 ## What you do, per registered fact
+
+A fact with a retrieved source is checked by retrieval, below. A fact
+measured on this disk is checked by measurement, in the subsection after it.
 
 1. Open the `source_url`, this session. Not a cached copy, not a search
    snippet, not a secondary source that quotes it.
@@ -39,6 +61,25 @@ read the other run folders.
 
 Three attempts at the same retrieval failure, then `failed` with the last
 error. Do not try a mirror, an archive, or a lookalike domain.
+
+### A first-party measurement
+
+1. Find the exact command the notes record. If the notes record no command,
+   the verdict is `failed`, and the note says the measurement is not
+   reproducible. A figure with no command behind it cannot be checked by you
+   or by anyone, which is the defect to report.
+2. Run that command as written. Do not improve it, and do not substitute a
+   command that you think measures the same thing.
+3. Quote the command and its output in `CHECK.md`, both verbatim. The check is
+   the record of the measurement, so the next reader re-runs one line and sees
+   what you saw.
+4. Record the date you ran it beside the figure. A measurement with no date is
+   not a check.
+5. A tree that is being edited while you measure it gives a snapshot, not a
+   constant. When the figure moved, or when the notes or the tree changed
+   during your run, do not confirm it and do not fail it: the verdict is
+   `changed`, and the note carries the value you measured, the date, and one
+   line saying the figure needs re-measuring once the tree is still.
 
 ## What you also look for
 
