@@ -217,7 +217,7 @@ Five rules:
 1. Frontmatter holds open items only. A closed item leaves `open_items`. It
    does not stay behind struck through.
 2. A close leaves a record: one line in `log.md`. A decision from the owner
-   also earns a `DECISIONS.md` entry, which the `scribe` writes.
+   also earns a `DECISIONS.md` entry, which the main session writes.
 3. `checked` moves when the item is verified, not when the file is edited. An
    old `checked` date is a claim nobody has tested.
 4. An item is written only after its claim is checked against disk, git, or a

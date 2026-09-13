@@ -1,0 +1,28 @@
+# The context files that check-open-items.py reads by default.
+#
+# One path per line, relative to the workbench root. Blank lines and lines
+# starting with # are ignored. A path that does not exist is a failure, so a
+# file that moves is reported and not skipped.
+#
+# This is a list and not a walk. A walk from the workbench root reads every
+# markdown file in the tree to find a handful, and it quietly takes in whatever
+# lands in the tree next: a vendored skill, a build output, a note somebody
+# dropped in. The list keeps the read small and, more importantly, keeps it
+# declared. A new context file enters the check by one tracked line here, which
+# means widening the check is a diff somebody reviewed rather than a side
+# effect of adding a file somewhere else.
+#
+# The schema in central-context/AGENTS.md, under `Open items schema`, says a
+# context file is any AGENTS.md, any SKILL.md, any SPEC.md. That is the rule for
+# where an item may live. This file is the list of the ones checked today. When
+# you write an open item into a file that is not listed here, add the line in
+# the same commit.
+
+# Carries items today.
+AGENTS.md
+
+# Named by the schema as a context file. It carries no item in frontmatter
+# today, and it carries an `open_items:` example at column 0 in its body,
+# inside a fenced code block, because the body documents the format. The script
+# reports nothing for it: it ignores every line inside a fence.
+central-context/AGENTS.md

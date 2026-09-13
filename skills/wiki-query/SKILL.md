@@ -81,6 +81,13 @@ YYYY-MM-DD · query · <the question, short> · answered from N pages
 Log the query even when the answer was a gap. A run of logged gaps on one
 subject is the strongest signal about what to ingest next.
 
+**Unless you are a role, in which case do not.** `research-operations` states
+that no role writes to `wiki/`, `raw/`, `index.md`, `log.md`, or
+`DECISIONS.md`, and that rule wins: a role queries the wiki often and a log
+line per role per query would bury the ingests. A role that queried the wiki
+reports it in a `Context:` line instead, and the main session writes the log.
+This step is the main session's.
+
 ## Not this skill
 
 - Filing a new source and compiling it. Use `wiki-ingest`.
@@ -90,5 +97,5 @@ subject is the strongest signal about what to ingest next.
   `wiki-verify`.
 - Putting an open question to the owner, or closing one. Use `wiki-open-items`.
 - Researching a prospect or a market for a client artifact. Use
-  `research-sourcing`, which sets the admission rules for a fact that will be
+  `prospect-research`, which sets the admission rules for a fact that will be
   cited outside the practice.

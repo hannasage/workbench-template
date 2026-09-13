@@ -5,8 +5,9 @@ description: "The operating procedure for the business research team. Use when t
 
 # Research operations
 
-The research team is the delivery pipeline's sibling. The delivery pipeline
-turns a request into merged code. The research team turns a question into a
+The research team is the sibling of the code pipeline the `superpowers` plugin
+carries. That pipeline turns a request into merged code. The research team
+turns a question into a
 document the owner can act on, with every fact traceable to a source they can open.
 
 Read `AGENTS.md` at the container root first. Its always-on rules bind every
@@ -24,9 +25,8 @@ produces a second home for a fact that already has one.
 
 ## The stages
 
-The main session orchestrates. There is no orchestrator role, for the same
-reason the delivery pipeline has none: a role that reads everyone's task starts
-doing everyone's task.
+The main session orchestrates. There is no orchestrator role: a role that
+reads everyone's task starts doing everyone's task.
 
 | Stage | Role | Writes | Ends with |
 |---|---|---|---|
@@ -212,8 +212,8 @@ role's report to the session. The research-editor collects every one into
 `Decisions for the owner`. A concern raised in a notes file and absent from the
 deliverable is an editing defect.
 
-A role that cannot proceed follows the self-correction protocol from the
-delivery pipeline: three attempts at the same failure, then `BLOCKED.md` in the
+A role that cannot proceed follows the self-correction protocol: three
+attempts at the same failure, then `BLOCKED.md` in the
 run folder with what it was doing, what it tried, the exact error, and its
 reading of the cause. Then it stops.
 
@@ -237,7 +237,7 @@ sources. A page that needs the underlying source cites the deliverable's
 `Sources` section and the owner files that source separately.
 
 A decision the owner makes from a deliverable goes to `DECISIONS.md` by the
-`scribe`, in the delivery pipeline's format. Research roles never write there.
+main session, in that file's format. Research roles never write there.
 
 ## The rules that never bend
 

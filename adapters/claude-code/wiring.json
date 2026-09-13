@@ -1,0 +1,7 @@
+{
+  "links": {
+    "CLAUDE.md": "AGENTS.md",
+    ".claude/agents": "../agents",
+    ".claude/skills": "../skills"
+  }
+}

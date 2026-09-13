@@ -1,6 +1,6 @@
 ---
 name: prospect-dossier
-description: "How the research team studies one prospect and produces two documents: an internal dossier for the owner and a handoff document they can give the prospect. Use when a brief names a business the practice might sell to. Covers what to research about the entity, its vertical, its public image, and its web presence; the audit checklist for a small business's online presence; the internal dossier's sections including the catch and the score; the handoff document's sections, tone, and what it never contains; and the rendering handoff to the brand skill. Route which facts may be cited to prospect-research, which carries the practice's regional source tiers and the four gates."
+description: "How the research team studies one prospect and produces two documents: an internal dossier for the owner and a handoff document they can give the prospect. Use when a brief names a business the practice might sell to. Covers what to research about the entity, its vertical, its public image, and its web presence; the audit checklist for a small business's online presence; the internal dossier's sections including the catch and the score; the handoff document's sections, tone, and what it never contains; and the rendering handoff to the brand skill. Route which facts may be cited to prospect-research, which carries the practice's own source tiers and the four gates."
 ---
 
 # Prospect dossier
@@ -11,10 +11,13 @@ that answers a different question for the prospect: "what does the public
 see when it looks for you, and what could change".
 
 `prospect-research` decides what may be written down and carries the tier
-table for the practice's buyer: owner-operated specialty retail in Howard,
-Carroll, Frederick, Baltimore, and Anne Arundel counties. This skill decides
-what to look for and what the two documents look like. `research-sourcing`
-binds wherever `prospect-research` is silent.
+table for the practice's buyer.
+
+> FILL: name the buyer segment here in one clause, once `prospect-research`
+> names it. Until then this sentence stays generic on purpose.
+
+This skill decides what to look for and what the two documents look like.
+`research-sourcing` binds wherever `prospect-research` is silent.
 
 The dossier and handoff layout this skill sets is the example house standard.
 Replace it with your own, or adopt it deliberately and say so in
@@ -181,9 +184,10 @@ not.
 ## Rendering
 
 Both files are markdown and both are canonical. When the owner wants the handoff
-document as a branded artifact, that is a delivery pipeline task for
-`interface-builder`, under the workbench's brand skill if one is installed,
-with `handoff.md` as its specification. The research team does not render.
+document as a branded artifact, that is a build task for the code pipeline
+named under "How work runs" in `AGENTS.md`, under the workbench's brand skill
+if one is installed, with `handoff.md` as its specification. The research
+team does not render.
 
 Layout conventions the render follows:
 

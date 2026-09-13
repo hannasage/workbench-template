@@ -59,10 +59,9 @@ The numbering is load-bearing. Roles and skills cite rules 4, 8, 9 and 10 by
 number. Change what a rule says; do not renumber it.
 
 1. **Reserved.** Your workbench's own rule, or left empty.
-2. **The house writing standard governs output written here.**
-   > FILL: name the skill. This template ships none. Until one is installed:
-   > short sentences, active voice, simple tenses, one word one meaning,
-   > condition before command, every technical term defined at first use.
+2. **`simple-english` governs output written here.** Short sentences, active
+   voice, simple tenses, one word one meaning, condition before command, every
+   technical term defined at first use. Load it always.
 3. **The interface and copy standards bind anything a person looks at.**
    > FILL: name those skills, and say which binds interface work and which
    > binds client-facing copy. Neither binds ordinary chat, where rule 2
@@ -106,6 +105,28 @@ call, or anything with no obvious undo.
 
 ---
 
+## How work runs
+
+**Code, and anything built.** The `superpowers` plugin, an open-source set of
+skills that carries an idea to a draft pull request: `brainstorming` turns an
+idea into a design, `writing-plans` turns the design into small tasks,
+`executing-plans` or `subagent-driven-development` builds them,
+`test-driven-development` and `verification-before-completion` bind every
+task, `requesting-code-review` reviews the result, and
+`finishing-a-development-branch` ends on a draft pull request. Describe the
+work and let it route. Do not write a specification or a plan by hand first.
+The plugin is installed per harness, not shipped here; each adapter's
+`README.md` under `adapters/` says how.
+
+**Research.** The six roles in `agents/`, run as the `research-operations`
+skill says. The main session orchestrates and no role writes the knowledge
+base.
+
+Nothing else runs through a role or a pipeline here. Work that fits neither is
+done in the main session, under the always-on rules.
+
+---
+
 ## Routing
 
 Read this file, then read only what the table sends you to.
@@ -114,6 +135,8 @@ Read this file, then read only what the table sends you to.
 |---|---|
 | Setting this workbench up for the first time | `prompts/setup.md` |
 | Which harnesses this workbench runs on, and how to wire one up | `adapters/README.md` |
+| Code: a feature, a fix, a script, a repo | the `superpowers` plugin, starting with its `brainstorming` skill |
+| Reviewing a diff before a pull request | the `superpowers` plugin's `requesting-code-review` skill |
 | What the workbench knows about a person, company, project, decision, or figure | the `wiki-query` skill, `skills/wiki-query/SKILL.md` |
 | A new source that needs to enter the knowledge base | the `wiki-ingest` skill, `skills/wiki-ingest/SKILL.md` |
 | Health check the knowledge base | the `wiki-lint` skill, `skills/wiki-lint/SKILL.md` |
@@ -122,7 +145,7 @@ Read this file, then read only what the table sends you to.
 | The wiki's layout, page types, frontmatter, or the open items schema | `central-context/AGENTS.md` |
 | Research on a market, a competitor set, a purchase, a prospect, or a quarterly plan | the `research-operations` skill, `skills/research-operations/SKILL.md`, then the research roles in `agents/README.md` |
 | What a research role may cite, on any subject | the `research-sourcing` skill, `skills/research-sourcing/SKILL.md` |
-| What a delivery pipeline role does | `agents/README.md` |
+| What a research role does | `agents/README.md` |
 | A decision that was settled, and why | `DECISIONS.md` |
 | Writing code in a repo here | that repo's `AGENTS.md`, then its `SPEC.md` |
 
@@ -157,7 +180,7 @@ project repos you nest here, which have their own remotes and are ignored.
 | `agents/` | Role definitions, one file per role | Root repo |
 | `scripts/` | Everything executable that is not a skill's and not a project's | Root repo |
 | `prompts/` | Prompts a person pastes in on purpose. Not loaded by anything | Root repo |
-| `DECISIONS.md` | The append-only decision log. The `scribe` writes it | Root repo |
+| `DECISIONS.md` | The append-only decision log. The main session writes it | Root repo |
 
 > FILL: add one row per project repo you nest here, and add its directory name
 > to `.gitignore` and to the `dirs` list in the `wiki-verify` skill.
@@ -166,6 +189,10 @@ A skill is discovered only when its directory sits directly under `skills/`
 with a `SKILL.md` inside it. Nesting one a level deeper disables it silently. A
 harness that discovers skills or roles at a path of its own gets that path from
 its adapter, per the routing table, and neither directory moves to suit it.
+What sits at that path is a tracked symlink or a generated file, declared by
+the adapter and checked by `python3 scripts/check-harness.py`. Edit `agents/`,
+`skills/` or `.mcp.json`, run `python3 scripts/sync-harness.py`, and never edit
+the copy.
 
 In `.gitignore`, a path with square brackets in it needs them escaped, because
 git reads `[...]` as a glob character class.
@@ -183,7 +210,11 @@ tests is a blocked commit.
 
 Run `python3 scripts/check-roles.py` before any commit that touches `agents/`
 or `skills/`. A harness skips a malformed role file in silence and nothing else
-catches it.
+catches it. Run `python3 scripts/check-open-items.py` before any commit that
+touches an `open_items` block. An item the script cannot read blocks nothing.
+Run `python3 scripts/check-harness.py` before any commit that touches
+`agents/`, `.mcp.json`, or anything under `adapters/`. A generated file that
+drifts from its source is a role that runs differently on two harnesses.
 
 > FILL: once the engineering standard is ingested, this section becomes a
 > summary and the wiki page becomes the authority. Name the page here.

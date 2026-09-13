@@ -24,6 +24,10 @@ repo. Everything else is here.
 |---|---|---|
 | `check-roles.py` | Checks agent and skill frontmatter | The workbench root: `python3 scripts/check-roles.py` |
 | `model-registry.txt` | Data, not a script. The values `check-roles.py` accepts in a role's `model:` field. It ships with no values in it | Read by `check-roles.py` |
+| `check-open-items.py` | Checks the `open_items` frontmatter of the context files | The workbench root: `python3 scripts/check-open-items.py` |
+| `open-items-files.txt` | Data, not a script. The context files `check-open-items.py` reads by default | Read by `check-open-items.py` |
+| `sync-harness.py` | Generates, per adapter manifest, the role files and the MCP tables a harness reads in its own format, from `agents/` and `.mcp.json` | The workbench root: `python3 scripts/sync-harness.py`, or `--check` to report and write nothing |
+| `check-harness.py` | Proves the wiring: every declared symlink, every skill and role reachable through it, every generated file current, no harness named in the neutral core, and the entrypoint under its size cap | The workbench root: `python3 scripts/check-harness.py` |
 
 ## check-roles.py
 
@@ -89,20 +93,111 @@ no consecutive hyphens. It also publishes a validator, `skills-ref validate`,
 which checks a single skill and not the roles, the nesting, or the tree shape
 this script covers.
 
+## check-open-items.py
+
+An open item is a question nobody has settled, written into the `open_items`
+frontmatter of a context file. This script is the one reader of that block.
+
+One written form is accepted. It is the example block in the `Open items schema`
+section of `central-context/AGENTS.md`, which is the authority on the six fields
+and on what each one holds. `open_items:` sits at column 0 inside frontmatter,
+an item opens at two spaces with `- id:`, the five other keys each sit on their
+own line at four spaces in the schema's order, and the `item: >` paragraph sits
+at six. Every other form is refused by name, never parsed and never guessed at.
+A refusal names the path, the line, the shape found, and the edit that fixes it.
+A refused item is dropped whole, so no file is ever half-read while it appears
+read.
+
+Three things it reports separately:
+
+- **A failure** is a defect. A refused shape, a path it cannot read, or a file
+  that declares `open_items:` and yields no item. Reading nothing is never a
+  pass.
+- **A question** blocks and says nothing about the file being wrong. There are
+  two: no file read declares `open_items:` at all, which almost always means the
+  paths are wrong, and an `open_items:` at column 0 outside frontmatter and
+  outside a fenced code block, which the script does not read and cannot tell
+  from a block somebody wrote in the wrong place.
+- **A due item** is one whose `checked` date is older than the cutoff. Nobody has
+  tested that claim since the date shown. `wiki-verify` re-tests it in a reading
+  pass, so a due item never affects the exit code.
+
+The exit code is the failures plus the questions, capped at 125, so it can run
+as a pre-commit hook with no wrapper. Nothing calls it automatically yet.
+
+**On a clean tree it reports 0 failures and 0 questions, and it exits 0.** Any
+finding on a tree nobody has just edited is worth reading.
+
+The script ignores every line inside a fenced code block. A fenced example is
+documentation, never a declaration. A fence that opens and never closes is a
+failure naming the line it opened on, because every line below an open fence
+is unread.
+
+With no path argument the script reads the file list at
+`scripts/open-items-files.txt`, one path per line. **An item in a file that list
+does not name is invisible.** When you write an item into a file the list does
+not name, add the line in the same commit. A listed path that no longer exists
+is a failure. A path argument checks something else instead, and a directory
+argument checks every `*.md` file below it. An entry below it that the
+filesystem cannot describe, such as a broken symlink, is a failure too, and it
+still counts as a file the run found.
+
+Four options:
+
+- `--findings-only` prints the findings and the counts, and holds back the item
+  listing. Mechanical check 1 of `skills/wiki-verify/SKILL.md` calls the script
+  this way.
+- `--stale-days N` sets the due window, in days since `checked`. Default 14.
+- `--today YYYY-MM-DD` sets the run date, for a test.
+- `--root PATH` sets the path findings print relative to.
+
+## sync-harness.py
+
+Every path, format identifier and harness fact it uses comes from
+`adapters/<id>/wiring.json`, so the script names no harness. A manifest's
+`roles` block names a registered format, the directory to write into, and a
+mapping file of extra per-role values; its `mcp` block names a format, the
+source `.mcp.json`, the path to write, and a hand-edited head to put first.
+The generated files are committed. Run the script after any edit to `agents/`,
+to `.mcp.json`, or to a mapping or head file, and commit what it wrote.
+
+`--check` writes nothing and exits 1 with one line per file that is missing,
+differs from its source, or has no source left. Exit 2 is an input the script
+cannot use, named on stderr: an unreadable manifest, a role with no
+frontmatter, a mapping naming a role that does not exist, a format nobody
+registered, or an MCP server the target format cannot express. It refuses
+rather than approximates, because a server rendered differently from its
+source is a server that works on one harness and silently not the other.
+
+## check-harness.py
+
+The one command that says whether a clone is wired. One line per failure,
+then `N failure(s)`, and the exit code is N capped at 125. It reads the same
+manifests as `sync-harness.py`, so an adapter is checked the moment its
+manifest exists.
+
+The harness-name scan reads `adapters/harness-names.txt`, strips every
+`adapters/<id>/...` path token from a line, and reports every remaining match
+in the ten permitted paths of the neutral core. Zero on a clean tree is the
+right answer: every sentence in the core that reaches an adapter carries a
+path and no harness name. A plain file where a symlink should be gets the
+Windows fix in its message.
+
+It proves wiring, not behaviour. Whether a harness loads the entrypoint,
+dispatches a role, or completes a wiki operation is the acceptance test below,
+which does not exist yet.
+
 ## Tests
 
-`tests/` holds 58 tests, all for `check-roles.py`. Run them from the workbench
-root with `python3 -m unittest discover -s scripts/tests`. They pass on
-2026-09-11. What they cover is described in `check-roles.py`'s own module
-docstring and above.
+`tests/` holds the tests for every script here, one file per script. Run them
+from the workbench root with `python3 -m unittest discover -s scripts/tests`.
+What each file covers is described in its script's module docstring and above.
 
 ## Not built yet
 
-The work that made this workbench harness-neutral plans three more scripts
-here: `generate-adapter-roles.py`, `check-neutral-core.py` and
-`harness-acceptance.py`. None of the three exists on disk on 2026-09-11, so
-this file does not say what they do. Add a table row for each one when it
-lands, written from the script itself.
+`harness-acceptance.py` does not exist on disk on 2026-09-12, so this file does
+not say what it does. Add its table row when it lands, written from the script
+itself.
 
 One thing about the acceptance test is settled and belongs here, because a
 reader who runs it will see failures and wonder whether the suite is broken. It

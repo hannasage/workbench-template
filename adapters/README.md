@@ -10,6 +10,17 @@ what must be: the template ships no `SPEC.md`, and its absence is not a defect.
 An adapter is one directory here that holds the wiring for one harness and
 nothing else.
 
+The wiring itself is tracked in git, outside the ten paths: the symlinks each
+adapter's `wiring.json` declares, the files `scripts/sync-harness.py`
+generates from the core, and `.mcp.json`, the one hand-edited source of MCP
+servers. A harness's own dot-directory is not the neutral core, so a symlink
+or a generated file there names nothing the core may not name. Every one of
+those paths is owned by an adapter, is never hand-edited except `.mcp.json`,
+and is checked by `python3 scripts/check-harness.py`. Settled by the owner on
+2026-09-12, in place of a per-harness installer: a clone works with no step
+between clone and session, and a generated file that is committed can be
+proved current, which an installer's output cannot.
+
 One routing row in `AGENTS.md` points at this file, and one paragraph in
 `README.md` describes the adapter system. Neither is an exception to a rule, and
 neither is a budget anybody has to stay inside. A neutral-core file may name the
@@ -19,11 +30,11 @@ carrying the wiring. Nothing counts those references. On 2026-09-12 the neutral
 core mentioned an adapter on 40 lines, 24 of them in `prompts/setup.md`, and that
 is a reading rather than a limit.
 
-What a neutral-core file may not do is name a harness. The grep in item 8 of
-"Adding an adapter" below is that check, and on this tree on 2026-09-12 it
-printed nothing and exited 1. No output is the only passing output, and it is the
-expected one: every sentence in the neutral core that reaches the adapters
-carries a path and names no harness, so the pattern has nothing to match.
+What a neutral-core file may not do is name a harness. `scripts/check-harness.py`
+is that check: it reads the patterns in `adapters/harness-names.txt`, strips
+every `adapters/<id>/...` path token from a line, and fails on any match in
+the ten paths. On this tree on 2026-09-12 it reported `0 failure(s)`. Item 8
+of "Adding an adapter" below says how to extend the pattern.
 
 A criterion number below is provenance and not a reading list. This workbench
 was built against a written specification in the tree it was generalised from,
@@ -41,10 +52,10 @@ absent is not a defect.
 
 | Kind | File |
 |---|---|
-| (a) | An installer that creates the discovery paths the harness documents |
-| (b) | One mapping file holding the per-role intent values, and one template for that harness's role format |
-| (c) | A `roles/` directory holding the generated role files |
-| (d) | One configuration file in the harness's own format, holding the model pointer and the wiring the harness needs |
+| (a) | `wiring.json`, the manifest that declares the discovery symlinks the harness documents and, where the harness needs them, the role format and directory and the MCP format and path to generate |
+| (b) | One mapping file holding the per-role values the harness's role format takes and the neutral role file does not, such as a model or a sandbox mode |
+| (c) | The generated role files, which live at the discovery path the harness documents and not here. `scripts/sync-harness.py` writes them from `agents/` and the mapping file |
+| (d) | One configuration head in the harness's own format, hand-edited here. The generated configuration file at the harness's path is this head plus the MCP tables rendered from `.mcp.json` |
 | (e) | One model registry of the values that harness accepts |
 | (f) | A `README.md` |
 
@@ -59,10 +70,11 @@ absent is not a defect.
   asking them. An adapter `README.md` names its harness's permissions
   documentation by URL and retrieval date instead, and ships no example rule
   set.
-- No model identifier, except in exactly three places: the one configuration
-  file (d), the dated run record in `README.md`, and the model registry (e).
-  The installer, the mapping file, the role template and every generated role
-  file carry none.
+- No model identifier, except in exactly four places: the mapping file (b),
+  which is where the owner pins a role to a model and the only place a
+  generated role file gets one from, the configuration head (d), the dated run
+  record in `README.md`, and the model registry (e). The manifest carries
+  none, and the neutral core carries none anywhere.
 
 An adapter `README.md` records, per surface, what was run and what happened:
 the harness name and version, the model identifier, the serving stack, the
@@ -110,6 +122,10 @@ column is how a check ends up flagging a correct cell.
   run has happened. A model cell may state a constraint instead where the harness
   accepts only one vendor's models, which note 1 below records for the one row
   that does it.
+- **The wiring column** reads `checked YYYY-MM-DD`, the date
+  `scripts/check-harness.py` last reported `0 failure(s)` on that adapter's
+  declarations, or `no adapter`. It is a check of files on disk, never of
+  behaviour, which is why it sits apart from the four surfaces.
 
 No cell is blank and no cell is inferred.
 
@@ -121,14 +137,14 @@ builds the adapter and runs the test. The model and version columns read
 `not tested` wherever no run has produced a value, adapter or no adapter, which
 is why every `no adapter` row below still carries it in those two.
 
-| Harness | 1. Entrypoint | 2. Role | 3. Skill | 4. Wiki op | Schema | Model | Version |
-|---|---|---|---|---|---|---|---|
-| Claude Code | not tested | not tested | not tested | not tested | reference | Claude models only | not tested |
-| Codex | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
-| DeepSeek Harness | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
-| opencode | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
-| goose | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
-| OpenHands | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
+| Harness | Wiring | 1. Entrypoint | 2. Role | 3. Skill | 4. Wiki op | Schema | Model | Version |
+|---|---|---|---|---|---|---|---|---|
+| Claude Code | checked 2026-09-12 | not tested | not tested | not tested | not tested | reference | Claude models only | not tested |
+| Codex | checked 2026-09-12 | not tested | not tested | not tested | not tested | reference | not tested | not tested |
+| DeepSeek Harness | no adapter | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
+| opencode | no adapter | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
+| goose | no adapter | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
+| OpenHands | no adapter | no adapter | no adapter | no adapter | no adapter | no adapter | not tested | not tested |
 
 The schema column states which mechanism delivers the wiki page schema in
 `central-context/AGENTS.md` to the model. It takes one of three values.
@@ -141,14 +157,16 @@ reaches a harness with no import and no adapter.
 
 Three things this matrix states about itself.
 
-1. `adapters/claude-code/` exists and holds an installer and a `README.md`. No
-   run has happened on it, so its four surfaces read `not tested`. It ships no
-   configuration file, so it names no model identifier at all, and its model
-   cell is a constraint rather than an identifier.
-2. `adapters/codex/` does not exist in this tree. Codex is the one adapter
-   target of the pass this file was written in, and the adapter was not built
-   before this file. Its row therefore reads `no adapter`, and criterion 56
-   requires `reference` in its schema column once the adapter ships.
+1. `adapters/claude-code/` holds a manifest and a `README.md`. Its three
+   symlinks are tracked and checked. No run has happened on it, so its four
+   surfaces read `not tested`. It ships no configuration head and no mapping,
+   so it names no model identifier at all, and its model cell is a constraint
+   rather than an identifier.
+2. `adapters/codex/` holds a manifest, an empty mapping, a configuration head
+   and a `README.md`. Its one symlink and its seven generated files are
+   tracked and checked. No run has happened on it, so its four surfaces read
+   `not tested`, and its schema column reads `reference` because the adapter
+   imports nothing.
 3. The four rows below Codex are harnesses this pass researched and did not
    adapt. Their rows stay because dated, retrieved evidence about a harness
    nobody has an adapter for is still what a colleague reads when choosing one.
@@ -308,35 +326,37 @@ hardware allows"
 location, so cite the long one.
 
 One fact holds across all five harnesses that read `AGENTS.md`: each reads
-`.agents/skills` at its own documented root. One symlink at `.agents/skills`
-pointing at `skills/` is therefore expected to serve a later adapter with no
-new path. Only one of them documents following a symlink there.
+`.agents/skills` at its own documented root. The symlink at `.agents/skills`
+pointing at `skills/`, declared by `adapters/codex/wiring.json`, is therefore
+expected to serve a later adapter with no new path. That adapter's manifest
+declares the same link with the same target, which `scripts/check-harness.py`
+accepts. Only one of the five documents following a symlink there.
 
 ## What is not built
 
-Five things this file names as absent rather than describing as working.
+Three things this file names as absent rather than describing as working.
 
-1. `scripts/generate-adapter-roles.py` does not exist. Every adapter role file
-   is generated and never hand-edited, and this is the script that will do it.
-2. `scripts/check-neutral-core.py` does not exist. It is the home of every
-   mechanical neutral-core check: the harness-name grep, the byte caps, the
-   skills-in-prose assertion, the read-only description assertion, and the
-   delete test.
-3. `scripts/harness-acceptance.py` does not exist. It is the runnable
-   acceptance test for the four surfaces.
-4. No per-adapter model registry exists. The one adapter on disk names no model
+1. `scripts/harness-acceptance.py` does not exist. It is the runnable
+   acceptance test for the four surfaces. Two scripts that earlier versions of
+   this file named as absent now exist under other names:
+   `scripts/sync-harness.py` generates the adapter role and MCP files, and
+   `scripts/check-harness.py` runs the mechanical checks: the symlinks, the
+   reachability of every skill and role, the currency of every generated file,
+   the harness-name scan, and the entrypoint byte cap. The skills-in-prose
+   assertion, the read-only description assertion, and the delete test are
+   still run by hand, per item 8 below.
+2. No per-adapter model registry exists. Neither adapter on disk names a model
    identifier, so a registry there would hold nothing.
-5. The stub check of criterion 63 has not been run. Nobody has added a stub
+3. The stub check of criterion 63 has not been run. Nobody has added a stub
    adapter by following the section below, so no date and no name are recorded
    here. Until that run happens, the procedure below is unproven by anybody
    except its author.
 
-Do not present a command line for any of the three scripts above as runnable. A
-step may name the command it will use, as items 5 and 6 below do, on the one
-condition that the same item opens by saying the script does not exist yet.
-Absence first, command second: a reader who skims the first line of an item must
-not be able to reach a command that would fail. Naming the command at all is what
-lets a colleague follow the step the day it lands.
+Do not present a command line for the acceptance script as runnable. A step may
+name the command it will use, as item 6 below does, on the one condition that
+the same item opens by saying the script does not exist yet. Absence first,
+command second: a reader who skims the first line of an item must not be able
+to reach a command that would fail.
 
 ## Adding an adapter
 
@@ -344,20 +364,17 @@ Nine items, numbered so a later edit that drops one is visible. Follow them in
 order. This section names no harness, because it is the same procedure for
 every one.
 
-The nine items cite 15 paths and 5 section names, counted 2026-09-12, and the
-counts are stated so that a later edit adding an unresolvable citation is
-visible. Every section name is a heading in this file. Ten of the paths exist in a
-fresh clone. Three are named as absent in the same item that cites them:
-`scripts/generate-adapter-roles.py` in item 5, `scripts/harness-acceptance.py` in
-item 6, and `SPEC.md` in item 8, which names it as a file this template does not
-ship and never as a file to read. The last two, `roles/` and
-`adapters/<harness-id>/roles/`, are paths you create rather than paths you open.
+Every section name the nine items cite is a heading in this file. Every path
+they cite exists in a fresh clone, except two named as absent in the same item
+that cites them: `scripts/harness-acceptance.py` in item 6, and `SPEC.md` in
+item 8, which names it as a file this template does not ship and never as a
+file to read.
 
 1. **Know what you may ship.** The six kinds of file are in "What an adapter
-   may hold" above: an installer, a mapping file with a role template, a
-   `roles/` directory, one configuration file, one model registry, and a
-   `README.md`. Only the `README.md` is required. Ship nothing of a seventh
-   kind.
+   may hold" above: a `wiring.json` manifest, a mapping file, the generated
+   role files at the harness's own path, one configuration head, one model
+   registry, and a `README.md`. Only the `README.md` is required. Ship nothing
+   of a seventh kind.
 2. **Know what passes.** The four surfaces and the pass condition for each are
    in "The four acceptance surfaces" above. Read them before you write
    anything, because they are what the adapter exists to satisfy.
@@ -369,13 +386,16 @@ ship and never as a file to read. The last two, `roles/` and
 4. **Record each one with a source URL and a retrieval date.** Where the
    documentation is silent, write `not documented` and never `not supported`.
    Silence is a gap in the record, not a statement about the harness.
-5. **The role generator does not exist yet, so this step has nothing to run.**
-   `scripts/generate-adapter-roles.py` is absent, per "What is not built" above.
-   An adapter added today therefore ships no generated roles, and its `README.md`
-   says so. What the step becomes the day the script lands: run `python3
-   scripts/generate-adapter-roles.py <harness-id>`, which reads `agents/` and your
-   mapping file and writes `adapters/<harness-id>/roles/`, and run it again with
-   `--check` to prove a clean tree produces no diff.
+5. **Declare the wiring, then generate it.** Write
+   `adapters/<harness-id>/wiring.json`: a `links` object for every symlink the
+   harness documents, and, where the harness needs them, a `roles` block naming
+   a format `scripts/sync-harness.py` registers, the directory to write into,
+   and the mapping file, and an `mcp` block naming a format, the source
+   `.mcp.json`, the path to write, and the head file. Create the symlinks with
+   `ln -s` and commit them. Then run `python3 scripts/sync-harness.py`, commit
+   what it wrote, and run it again with `--check` to prove a clean tree
+   produces no diff. A format the script does not register is exit 2 naming
+   it; adding one is one rendering function and its tests.
 6. **The acceptance test does not exist yet either, so no surface can be run.**
    `scripts/harness-acceptance.py` is absent, per the same section. Every surface
    cell of a new row therefore reads `not tested` until the script lands, and
@@ -390,28 +410,29 @@ ship and never as a file to read. The last two, `roles/` and
 8. **Keep the neutral core neutral.** Two rules, and learning them here is
    cheaper than learning them from a failing check.
 
-   First, a grep of the neutral core for harness names, harness directories and
-   harness tools returns nothing. Run it from the workbench root:
+   First, no file in the neutral core names a harness. Add one line to
+   `adapters/harness-names.txt` for your harness's name and one for its
+   discovery directory, as a regular expression, then run from the workbench
+   root:
 
    ```bash
-   grep -rnE 'Claude Code|\.claude|\.codex|codex|\.dsh|dsh|deepseek|\.opencode|opencode|goose' \
-     AGENTS.md central-context/ skills/ agents/ scripts/ prompts/ \
-     DECISIONS.md README.md .gitignore
+   python3 scripts/check-harness.py
    ```
 
-   No output, and grep exits 1. Run on this tree on 2026-09-12, that is exactly
-   what it printed. Zero is the right answer and not a broken pattern: every
-   sentence in the neutral core that reaches the adapters carries a path and no
-   harness name, so the pattern has nothing to match. Build your own pattern from
-   the harness names in the support matrix above rather than from memory, add your
-   harness's name and its discovery directory to it, and keep the output empty.
-   The paths after the pattern are the permitted ten, minus the one that does not
-   exist. `SPEC.md` is on the list and this template ships none, so passing it to
-   grep only earns an error about a missing file.
+   `0 failure(s)` is the pass. The script reads the ten permitted paths,
+   skipping `SPEC.md` when this template ships none, strips every
+   `adapters/<id>/...` path token from a line, and reports every remaining
+   match with its file and line. Zero is the right answer and not a broken
+   pattern: every sentence in the neutral core that reaches the adapters
+   carries a path and no harness name, so the pattern has nothing to match.
+   The same run also proves your symlinks, the reachability of every skill and
+   role through them, the currency of every generated file, and the size of
+   the entrypoint.
 
-   Second, deleting this whole directory leaves a workbench that still passes its
-   own checks: `python3 scripts/check-roles.py` reports zero failures and zero
-   questions.
+   Second, deleting this whole directory leaves a workbench that still passes
+   its own checks: `python3 scripts/check-roles.py` reports zero failures and
+   zero questions, and `python3 scripts/check-harness.py` reports zero
+   failures, because with no manifest there is nothing to declare.
 9. **Start from retrieved evidence, not from a search.** For any harness in the
    matrix above that reads `no adapter`, "Evidence per row" above already holds
    the four surfaces of item 3, each with a source URL and the date it was

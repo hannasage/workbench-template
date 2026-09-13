@@ -1,0 +1,5 @@
+# What this harness writes under its own directory during a session. None of
+# it belongs in a commit. The two symlinks beside this file are tracked.
+settings.local.json
+scheduled_tasks.lock
+worktrees/

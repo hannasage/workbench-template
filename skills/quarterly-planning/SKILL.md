@@ -118,9 +118,9 @@ checked", never a guess.
 
 ### Decisions
 
-The plan closes with the decisions the owner made to adopt it, each as a line the
-`scribe` can carry to `DECISIONS.md` if they want it logged: what was chosen,
-instead of what, because of what.
+The plan closes with the decisions the owner made to adopt it, each as a line
+the main session can carry to `DECISIONS.md` if they want it logged: what was
+chosen, instead of what, because of what.
 
 ## The review
 

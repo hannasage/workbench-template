@@ -1,0 +1,19 @@
+# One regular expression per line. scripts/check-harness.py joins them with |
+# and searches every line of the neutral core after stripping path tokens of
+# the form adapters/<id>/... A hit is a harness name in a file that may name
+# none. Blank lines and lines starting with # are ignored.
+#
+# Add a line for every harness in the support matrix in adapters/README.md,
+# with its name and its discovery directory.
+Claude Code
+\.claude\b
+\bcodex\b
+\.codex\b
+\.agents\b
+\bdsh\b
+\.dsh\b
+deepseek
+\bopencode\b
+\.opencode\b
+\bgoose\b
+\bopenhands\b
