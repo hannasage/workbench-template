@@ -50,9 +50,9 @@ symlinks it declares are tracked in git and need no installer.
    memory files and the six roles under custom agents ("check that agents
    appear in `/context` under Custom Agents",
    `https://code.claude.com/docs/en/plugins`, retrieved 2026-09-12). `/plugin`
-   shows the plugin from step 2 if you installed it. The twelve skills load on
-   demand when a request matches a description; ask for a wiki lint to see one
-   fire.
+   shows the plugin from step 2 if you installed it. The thirteen skills load
+   on demand when a request matches a description; ask for a wiki lint to see
+   one fire.
 
 5. Paste `prompts/setup.md` into the session. It walks the specialisation
    pass and ends by running the checks above again.

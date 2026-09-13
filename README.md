@@ -17,7 +17,7 @@ workbench/
   .mcp.json            MCP servers, the one source every harness is wired from. Empty
   adapters/            one thin adapter per harness: a manifest, a README, and nothing else
   agents/              6 research role definitions, all examples
-  skills/              12 skills: five that run the wiki, seven that run research
+  skills/              13 skills: five that run the wiki, seven that run research, one writing standard
   scripts/             the checks and the generator, with their tests
   prompts/             setup.md, and prompts you paste in on purpose
   central-context/     the knowledge base

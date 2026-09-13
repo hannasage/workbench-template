@@ -186,9 +186,9 @@ is the better home for an identifier and the registry stays empty.
 
 ## Stage 3: the research skills
 
-Seven of the twelve installed skills describe how to research something. Two
-of them have sections left deliberately empty, because they cannot be written
-once for everybody.
+Seven of the thirteen installed skills describe how to research something.
+Two of them have sections left deliberately empty, because they cannot be
+written once for everybody.
 
 **`skills/prospect-research/SKILL.md`** has two: the buyer segment, and the
 tier 1 records of authority for the jurisdiction. Ask the owner who they sell

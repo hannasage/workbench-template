@@ -47,7 +47,7 @@ clone needs no step between clone and session.
    Until the project is trusted, `.codex/config.toml` and `.codex/agents/`
    are not read.
 
-4. Confirm the surfaces loaded. `/skills` lists the twelve skills, or type `$`
+4. Confirm the surfaces loaded. `/skills` lists the thirteen skills, or type `$`
    to mention one ("In Codex CLI or the IDE extension, run `/skills` or type
    `$` to mention a skill", `https://learn.chatgpt.com/docs/build-skills`,
    retrieved 2026-09-12). The documentation retrieved on 2026-09-12 names no
