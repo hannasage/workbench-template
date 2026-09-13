@@ -1,6 +1,6 @@
 ---
 name: research-sourcing
-description: "What a research role may write down, for any subject. Use whenever a fact is bound for a notes file, a comparison, a plan, a recommendation, or any document the owner or a client will read. Covers the three source tiers and three quality labels, the four gates a fact clears before it is cited, the fact register schema, how vendor content, surveys, user reviews, and legal or tax pages are handled, and how a gap or a disagreement is recorded. Route prospect-specific sources for the practice's region retail to prospect-research, which carries its own tier table and points here for the gates."
+description: "What a research role may write down, for any subject. Use whenever a fact is bound for a notes file, a comparison, a plan, a recommendation, or any document the owner or a client will read. Covers the three source tiers and three quality labels, the four gates a fact clears before it is cited, the fact register schema, how vendor content, surveys, user reviews, and legal or tax pages are handled, and how a gap or a disagreement is recorded. Route prospect-specific sources for the practice's buyer segment to prospect-research, which carries its own tier table and points here for the gates."
 ---
 
 # Research sourcing
@@ -8,8 +8,8 @@ description: "What a research role may write down, for any subject. Use whenever
 This skill decides what may be written down. The subject skills decide what
 to look for, and `research-operations` decides where it goes.
 
-`prospect-research` carries a tier table built for the practice's region specialty
-retail and points here for the gates. On which source settles a prospect
+`prospect-research` carries a tier table built for the practice's buyer segment
+and points here for the gates. On which source settles a prospect
 question, that skill wins. On what a fact must clear, this one binds every
 subject the research team touches, prospects included.
 
@@ -81,6 +81,31 @@ When the primary source cannot be retrieved, the figure may appear in the
 notes as "attributed by <secondary> to <primary>, primary not retrieved", and
 it does not reach the deliverable as a cited fact.
 
+### Tier 1, first-party: measured on this disk
+
+Settles a question about this practice's own tree, and nothing else.
+
+A first-party measurement is a figure a role produced by running a command
+here: a byte count, a file count, a directory size, a commit date. The tree is
+the record of authority for itself, so the measurement is tier 1 for what it
+measured. It carries label (a), because it is data from the organization that
+produced it and the command is its stated method.
+
+Three conditions, all of them:
+
+- The notes record the exact command, verbatim, so anyone can re-run it. A
+  figure with no command is not admissible at any tier, and the fact-checker
+  fails it as not reproducible.
+- The notes record the date the command ran. Like every tier 2 figure, this
+  one is a snapshot: write the date beside it or do not write it.
+- The source line names the path measured, not a URL. There is nothing to
+  fetch.
+
+A first-party measurement is never a published constant. It is true of one
+tree at one moment, and the next edit changes it. Never carry one into a later
+run without re-measuring, and never cite one as a fact about anything outside
+this disk.
+
 ## Quality labels
 
 Beside the tier, each source line carries a label that says what kind of
@@ -89,7 +114,7 @@ statute is (b), a tier 3 blog is (c).
 
 | Label | Means |
 |---|---|
-| (a) | A survey, dataset, or methodology document from the organization that produced it, with n and method stated where it is a survey |
+| (a) | A survey, dataset, methodology document, or first-party measurement from the organization that produced it, with n and method stated where it is a survey and the command stated where it is a measurement |
 | (b) | A standard, a statute, a regulation, a government page, a court ruling, a textbook, or a peer-reviewed paper |
 | (c) | Practitioner opinion, journalism, vendor marketing, a secondary roundup, a forum |
 
@@ -114,16 +139,23 @@ G1 means the page body, not the search result. A snippet is a lead.
 G4 is the gate that keeps a deliverable short. A fact that passes G1 to G3 and
 fails G4 goes in the notes and stays out of the document.
 
-## Three outcomes, never two
+## Four outcomes, never two
 
 | Outcome | Condition | What the deliverable does |
 |---|---|---|
 | Cite | All four gates pass | States the fact with source and date |
 | Verify | G1 and G2 pass, G3 is doubtful | States the fact, names the date it was true, says it needs re-checking before use |
+| Not re-confirmed | A prior run recorded it, and this run did not re-fetch it | Names the figure, names the run that recorded it, and says plainly that this run did not re-retrieve it |
 | Gap | Any gate fails, or nothing was found | States what was looked for and that it does not exist publicly or could not be retrieved |
 
 The gap is a real outcome with a real sentence in the deliverable. It is not a
 footnote and it is not silence.
+
+A figure carried forward from an earlier run is neither cited, nor verified,
+nor a gap: it exists, somebody wrote it down, and nobody checked it this time.
+Calling it a gap overstates the absence and calling it verified overstates the
+check. A prior run's figure is a lead until it is re-retrieved, and this row is
+how a deliverable says so.
 
 ## The source line
 
@@ -141,6 +173,14 @@ Source: <publisher>, "<title>", <URL>, retrieval failed YYYY-MM-DD (<error>), no
 
 A failed retrieval is recorded because it proves the question was asked. It is
 never cited as evidence, and the deliverable never presents it as a source.
+
+A first-party measurement:
+
+```
+Source: first-party measurement, path <path measured>, command `<command>`, measured YYYY-MM-DD, tier 1, quality (a)
+```
+
+The command is the source. Without it the line is not a source at all.
 
 ## The fact register
 
@@ -166,6 +206,19 @@ fact-checker works from this register and from nothing else.
 `retrieval_status: failed` means the fact does not go in. Keeping the row is
 the point.
 
+**The id is namespaced to the notes file, never bare.** Prefix every id with a
+short slug for the file it lives in, so `ringc-F1` and `pricing-F1` are two
+facts and not one. Bare `F1` is refused. When more than one specialist writes
+into the same run folder, the `fact-checker` reads every register and writes
+one `CHECK.md`, and a bare id cannot address a fact once a run has more than
+one specialist in it.
+
+For a first-party measurement, `source_name` is `first-party measurement`,
+`source_url` is the path measured, `observed_on` is the date the command ran,
+`retrieval_status` is `retrieved`, and `gate_notes` carries the command
+verbatim. The fact-checker re-runs it from there, so a register row with no
+command cannot be checked.
+
 ## Handling particular kinds of source
 
 **Surveys.** Record n, the fielding date, the method, and who paid for it. A
@@ -185,6 +238,23 @@ Pavlou, and Zhang, "Why Do Online Product Reviews Have a J-Shaped
 Distribution?", Communications of the ACM 52(10), 2009. Note whether reviews
 were incentivized. Prefer platforms that state how they weight recency and
 incentives, and record that policy beside the figure.
+
+**A page that looks like a survey and is not.** A title with the word survey in
+it, a respondent count, and figures laid out as findings are presentation, not
+method. Before treating any figure as measured, find the sentence that states
+how it was measured. Where the page does not state one, the figure is a named
+opinion, label (c), whatever the page calls itself. Read the whole page before
+labelling it: the disclaimer is usually below the figures, not above them.
+
+**A source about a different population.** A survey can be current, well
+sourced, and still be about somebody other than the buyer in the brief. An
+enterprise procurement study and a mid-market technology study are not evidence
+about a ten-person retailer, however good their method is. Two rules. Label the
+population beside the finding, in the same sentence, naming who the respondents
+actually were. Then say whether the finding is being carried across as evidence
+or as a hypothesis, and never let the second quietly become the first. Where no
+source exists for the briefed population, that is a gap, and a study of a
+different population never fills it.
 
 **Analyst reports.** A Gartner, Forrester, IDC, or G2 position is a tier 2
 opinion with a published method and unpublished or client-only weights. Cite
@@ -246,4 +316,5 @@ First-party to the practice this template came from, written 2026-09-11. The
 gates, outcomes, and register began in `prospect-research` and were
 consolidated here, so one rule set covers every research subject. The quality
 labels follow an (a), (b), (c) scheme. The J-shaped distribution finding is
-cited above.
+cited above. The first-party tier was added after a run registered
+measurements of this repository that no tier described.

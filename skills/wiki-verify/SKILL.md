@@ -20,11 +20,11 @@ fix is a decision, it stops and names the variants.
 
 ## Read this first
 
-`central-context/AGENTS.md` is the page schema and names the log format. The
-`open_items` schema in the root `AGENTS.md`
-names the fields this skill reads: `id`, `opened`, `checked`, `triggers`,
-`asks`, `item`. Its rule 3 is the one this skill enforces: `checked` moves when
-the item is verified, not when the file is edited.
+`central-context/AGENTS.md` is the page schema and names the log format. Its
+`Open items schema` section names the fields this skill reads: `id`, `opened`,
+`checked`, `triggers`, `asks`, `item`. Its rule 3 is the one this skill
+enforces: `checked` moves when the item is verified, not when the file is
+edited.
 
 A context file is any `AGENTS.md`, any `SKILL.md`, any `SPEC.md`, and any page
 under `central-context/wiki/`. Verify reads all of them.
@@ -43,29 +43,31 @@ changes nothing.
 
 ## The mechanical checks
 
-Run from the container root. Each one prints findings and nothing else. An empty
-result is a pass.
+Run from the container root. Checks 2 to 5 print findings and nothing else, and
+an empty result there is a pass. Check 1 is a script, and an empty result from
+it is not a pass: it prints how many files it read, how many declare
+`open_items:`, and how many items it parsed, and a file that declares a block
+and yields no item is a failure.
 
 **1. Old `checked` dates.**
 
 An item whose `checked` date is older than the cutoff is a claim nobody has
-tested. ISO dates compare as strings, so no date library is needed. `date -v`
-is the BSD form on macOS.
+tested. `scripts/check-open-items.py` computes the cutoff from the run date
+inside the script, in Python, so it runs the same on macOS and on Linux. A
+shell version that computes the cutoff with `date -v-14d`, the BSD form, fails
+silently on a GNU system: the cutoff becomes an empty string, every comparison
+against it is false, and the check reports a clean tree on every run.
 
 ```bash
-cutoff=$(date -v-14d +%F)
-grep -rl --include='*.md' '^open_items:' AGENTS.md central-context skills agents 2>/dev/null | while read -r f; do
-  awk -v F="$f" -v C="$cutoff" '
-    /^---$/ { fm++; if (fm==2) exit; next }
-    fm==1 && /^open_items:/ { inb=1; next }
-    fm==1 && inb && /^[^ ]/ { inb=0 }
-    inb && /^  - id:/      { id=$3 }
-    inb && /^    checked:/ { if ($2 < C) print F " · " id " · checked " $2 " · older than " C }
-  ' "$f"
-done
+python3 scripts/check-open-items.py --findings-only
 ```
 
-Every line printed is an item to re-test in the reading pass below.
+`--stale-days` sets the window and defaults to 14. Every line under `Due.` is
+an item to re-test in the reading pass below. A failure or a question above it
+means the script did not read every file, so the due list is short: fix that
+first, then run the check again. The script reads the context files listed in
+`scripts/open-items-files.txt`, and an item in a file that list does not name
+is never tested.
 
 **2. Disk facts that prose gets wrong.**
 

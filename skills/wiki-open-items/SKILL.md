@@ -15,22 +15,24 @@ The work that answers it happens in another session. Nobody connects the
 two, and the item is still open a month after it was answerable. The
 `triggers` field is the connection, and this skill reads it.
 
-The skill never answers the owner's question for them. It puts the question, names
-the variants, and stops.
+The skill never answers the owner's question for them. It puts the question,
+names the variants, and stops.
 
 ## Read this first
 
-`central-context/AGENTS.md` holds the open items schema, in the section of that
-name. It is the authority on the shape this skill matches, opens and closes, so
-read it before touching an `open_items` block. When this skill and that file
-disagree, that file wins and this skill gets corrected.
+The `Open items schema` section of `central-context/AGENTS.md` is the
+authority. Its fields are `id`, `opened`, `checked`, `triggers`, `asks`, and
+`item`. Its five rules bind this skill in full: frontmatter holds open items
+only, a close leaves a record, `checked` moves on verification only, verify
+before writing, one item in one file.
 
-That section defines the six fields, `id`, `opened`, `checked`, `triggers`,
-`asks` and `item`, and the five rules that bind this skill in full: frontmatter
-holds open items only, a close leaves a record, `checked` moves on verification
-only, verify before writing, one item in one file. This skill states none of the
-six and none of the five on its own authority. Without that file open, it cannot
-tell a well formed item from a malformed one.
+`scripts/check-open-items.py` reads that format, in the one written form the
+schema's example states. Every other form is refused by name, so a file this
+skill cannot read says so instead of reporting no items. The script reads the
+context files listed in `scripts/open-items-files.txt`. An item written into a
+file that list does not name is invisible to every step below, which is how
+one item can sit unread from the day it was opened: add the line in the same
+commit as the item.
 
 A context file is any `AGENTS.md`, any `SKILL.md`, any `SPEC.md`, and any page
 under `central-context/wiki/`.
@@ -51,21 +53,19 @@ the trigger match, is the one step a role runs for itself before it starts.
 
 **1. List every item.**
 
-Run from the container root. One line per item: file, id, dates, triggers.
+Run from the container root. One line per item: file, id, dates, whether
+`asks` is set, triggers.
 
 ```bash
-grep -rl --include='*.md' '^open_items:' AGENTS.md central-context skills agents 2>/dev/null | while read -r f; do
-  awk -v F="$f" '
-    /^---$/ { fm++; if (fm==2) exit; next }
-    fm==1 && /^open_items:/ { inb=1; next }
-    fm==1 && inb && /^[^ ]/ { inb=0 }
-    inb && /^  - id:/       { id=$3 }
-    inb && /^    opened:/   { op=$2 }
-    inb && /^    checked:/  { ck=$2 }
-    inb && /^    triggers:/ { sub(/^    triggers: */,""); print F " · " id " · opened " op " · checked " ck " · " $0 }
-  ' "$f"
-done
+python3 scripts/check-open-items.py
 ```
+
+Read the counts under the listing before the listing itself. They say how many
+files were read, how many declare `open_items:`, and how many items came out. A
+failure, including zero items from a file that declares a block, means the
+listing is short and the missing items are the ones you were looking for. Fix
+the file before matching triggers, because an item nobody can read blocks
+nothing.
 
 **2. Match triggers to the task in hand.**
 
@@ -102,23 +102,22 @@ owed. `item` is one paragraph that reads correctly with no other file open.
 Then test the shape:
 
 ```bash
-grep -rl --include='*.md' '^open_items:' AGENTS.md central-context skills agents 2>/dev/null | while read -r f; do
-  awk -v F="$f" '
-    /^---$/ { fm++; if (fm==2) exit; next }
-    fm==1 && /^open_items:/ { inb=1; next }
-    fm==1 && inb && /^[^ ]/ { inb=0 }
-    inb && /^  - id:/       { id=$3; seen[id]++; if (seen[id]>1) print F " · " id " · id used twice" }
-    inb && /^    opened:/   { op=$2 }
-    inb && /^    checked:/  { if ($2 < op) print F " · " id " · checked " $2 " before opened " op }
-  ' "$f"
-done
+python3 scripts/check-open-items.py
 ```
 
-An empty result is a pass. Append one line to `central-context/log.md`:
+Zero failures and the new item on its own line in the listing is the pass. An
+empty result is not: the script prints its counts, and a file that declares
+`open_items:` and yields no item is a failure, not silence. Append one line to
+`central-context/log.md`:
 
 ```
 YYYY-MM-DD · open-items · <file>#<id> · opened
 ```
+
+**One open or close, one log line.** The main session that opened or closed the
+item writes that line, and nobody else does. A role never writes it. Two
+writers on one close is how a single event could get two lines in an
+append-only file that nobody can edit afterwards.
 
 **5. Close an item.**
 
@@ -132,13 +131,21 @@ session. The entrypoint said the root repo had no remote in its open items and
 in its prose. Closing the item and leaving the prose is the failure this skill
 was written after.
 
-Make sure that the id is gone:
+Make sure that the id is gone. Run the script and read its whole output:
 
 ```bash
-grep -rn --include='*.md' 'id: <the-id>' AGENTS.md central-context skills agents
+python3 scripts/check-open-items.py
 ```
 
-Append one line to `central-context/log.md`:
+Three things make the pass: `0 failure(s)`, `0 question(s)`, and an item count
+one lower than the run before the close. Then read the listing and confirm
+that no line carries ` · <the-id> · `. Do not pipe this into `grep`. The pipe
+throws away the failure lines and the counts, so a run in which a file could
+not be read prints nothing at all and the silence reads as proof the item is
+gone, which is the defect steps 1 and 4 exist to close. `grep` also matches
+inside a longer id, so `obsidian-folder` matches `obsidian-folder-in-total`.
+
+Append one line to `central-context/log.md`, under the precedence in step 4:
 
 ```
 YYYY-MM-DD · open-items · <file>#<id> · closed by work: <what was done>

@@ -36,7 +36,7 @@ rings are in scope.
 | Direct | Same buyer, same offer | An independent engineer selling web and systems work to small retailers in the same counties |
 | Adjacent, same buyer | Same buyer, different offer | A local marketing agency that also builds sites for retailers |
 | Adjacent, same offer | Same offer, different buyer | A fractional CTO serving venture-funded startups |
-| Substitute | Neither, but takes the budget | A marketplace (Toptal, A.Team, Upwork), a platform's own site builder, a nephew, doing nothing |
+| Substitute | Neither, but takes the budget | A marketplace, a platform's own site builder, a nephew, doing nothing. **Correction 2026-09-11:** this row named Toptal, A.Team and Upwork. A.Team's own site states a Fortune 500 buyer and names HCA, Northern Trust, Lululemon and Blackstone, so it is not reachable by a small business the way Toptal's self-serve intake is. Upwork returned a retrieval failure and was not re-checked. Test a marketplace's stated buyer before placing it in this ring |
 
 The substitute ring is the one most research skips and the one the buyer
 weighs first. "Doing nothing" is a competitor with a price of zero and a cost
@@ -80,6 +80,46 @@ public figure", which is a finding.
 
 Positioning is recorded in the competitor's words first and translated second.
 The translation is the analyst's reading and is labelled as one.
+
+### Website structure
+
+Added 2026-09-11. The table above records what a competitor says. It records
+nothing about how the site is built to say it, and a brief that asks what a
+competitor website contains was assigned to this skill with no fields to fill.
+Collect these alongside the ten above whenever the brief asks about websites.
+
+| Field | What to record | Tier |
+|---|---|---|
+| Hero claim | The first claim above the fold, verbatim. A site with no hero records "not present", confirmed by a second retrieval | 1 for the quote |
+| Page inventory | Every destination in the primary navigation and in the footer, listed | 1 |
+| Home section order | Top to bottom, one line describing each section | 1 |
+| Proof types present | Counted, not just noted: case studies, named client logos, testimonials, stated metrics, published writing | 1 |
+| Primary call to action | Its label verbatim, its placement, and how many times it repeats | 1 |
+| Price disclosure | Own rate, market rates quoted about others, price framing with no number, or none. These are four different answers | 1 |
+
+Four rules that cost a run to learn.
+
+**Retrieve the home page as well as the deep link.** A brief that names a
+service page still needs the home page, because navigation, section order and
+call-to-action placement are properties of the home page. On 2026-09-11 doing
+this doubled the page count on one slice and changed four of five buyer fields.
+
+**"A rate appears" has four answers, not two.** A site that publishes its own
+price, a site that quotes the market's rates while publishing none of its own, a
+site that frames price without a number, and a site silent on price are four
+findings. Collapsing them into yes and no loses the most common case. On
+2026-09-11 one slice of five had zero own rates, two quoting market figures, and
+four framing price.
+
+**Count proof where it is, and say where.** Proof on a service page and proof on
+the home page are different facts, and one run found a competitor whose two
+pages disagreed on its own client and testimonial counts. Record the page beside
+the count.
+
+**Say which page speaks for the site.** A firm whose home page sells one thing
+and whose navigation sells another is one finding, not a contradiction to
+resolve. Record both and let the brief's reader decide whether it is a
+competitor for the buried offer.
 
 ## Step 4: the market layer
 
@@ -139,12 +179,12 @@ Record the source, not the number. The numbers are re-retrieved.
 | Source | What it settles | Caveat, as of 2026-09-11 |
 |---|---|---|
 | Fractional Jobs, "The Fractional Work Report 2026" | Hourly rates by function (engineering average $229), hours per week, engagement length, referral share, across all fractional functions | n = 1,733 survey responses plus platform data; function-level n not stated. (a) |
-| Go Fractional, "Fractional CTO Benchmarks (2026)" | A CTO rate index: median $220 per hour, interquartile $175 to $250, 17 hours per week | Built on a rolling index of 17 job posts plus platform data; marketing page from a marketplace. (a) with caveat |
-| Kompella, "2026 Fractional CTO Compensation & Engagement Survey" | Hourly $200 to $500; median $15,000 per month at two days per week; median engagement 12 months | 50+ respondents recruited by outreach; published by a fractional CTO firm. (a) with caveat |
-| Consulting Success fee study | Fee-model shares, rate distributions, first-client sources | n stated (about 1,000; 2,800+), method not; two of its pages report different shares for the same question; its fractional guide states "$30-$60 per hour", three to ten times below every other source. Indicative only |
+| Go Fractional, "Fractional CTO Benchmarks (2026)" | A CTO rate index: median $220 per hour, interquartile $175 to $250, 17 hours per week | Built on a rolling index of 17 job posts plus platform data; marketing page from a marketplace. (a) with caveat. **Correction 2026-09-11: not retrievable.** `gofractional.com` returned HTTP 403 on four attempts across three URLs. These figures cannot be re-checked and must not be cited until someone reaches the page |
+| Kompella, "2026 Fractional CTO Compensation & Engagement Survey" | Hourly $200 to $500; median $15,000 per month at two days per week; median engagement 12 months | **Correction 2026-09-11: these are not survey figures.** The page states "The numbers below are placeholder estimates based on Kompella's market knowledge while the survey is in field". This row read as a survey of 50+ respondents and it is one practitioner's estimate with a survey pending. Label (c), a named practitioner opinion, until the survey publishes |
+| Consulting Success fee study | Fee-model shares, rate distributions, first-client sources | n stated (about 1,000; 2,800+), method not; two of its pages report different shares for the same question. Indicative only. **Correction 2026-09-11:** the "$30-$60 per hour" outlier was recorded without its context. The same fractional guide page also states "$150-500+ per hour or $2,000-15,000+ per month per client", and neither figure is sourced on the page. It is a page that contradicts itself, not a low outlier, and that is the reason to treat it as indicative |
 | U.S. Bureau of Labor Statistics, Occupational Outlook Handbook | Employee wage baselines: software developers median $135,980; computer and information systems managers median $175,140 (May 2025) | Employees, not contractors. (a) |
 | SPI Research via Deltek, 2026 benchmark | Firm-level utilization 66.4%, bid-to-win 48.1%, pipeline coverage 175% of quarterly bookings | Firms, not solos. (a) |
-| MBO Partners, State of Independence 2025 | Size of the independent workforce, marketplace use (49%) | No rate data. (a) |
+| MBO Partners, State of Independence 2025 | Size of the independent workforce, marketplace use | No rate data. (a). **Correction 2026-09-11: the 49% figure did not reproduce.** The page retrieved that day states 42% for a differently worded question and no 49% appeared anywhere on it. Do not cite 49% |
 | Glassdoor, Payscale, contract software engineer | Self-reported pay | n of 46 and 7 respectively on 2026-09-11. Too small to use |
 | Frak, "State of Fractional" 2024 | Income bands, client counts, referral share for fractional workers | n = 250 per the press release; the PDF could not be retrieved on 2026-09-11, so figures exist only as attributed by secondary sources |
 
@@ -154,8 +194,9 @@ Three surveys agree that referrals and prior employers dominate, and disagree
 on the split. Consulting Success (2,800+): 24% of first clients from the most
 recent employer, 28% from any previous employer, 21% cold outreach, 14%
 referrals, 11% inbound. Fractional Work Report 2026 (1,733): 94% won clients
-through network referrals. MBO 2025: 49% of independents used an online
-marketplace. Cite the survey and its n. Do not blend them.
+through network referrals. MBO 2025, as re-retrieved 2026-09-11: 42% of
+independents used an online marketplace. Cite the survey and its n. Do not
+blend them.
 
 ## Step 5: synthesize
 
